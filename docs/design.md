@@ -39,9 +39,12 @@ it checks the cache and the credit cap, uploads the guide, and saves the reply.
 | 1 | Parse | `src/neuma/gabc.py` | GABC text | `Score`: syllables of notes at notated pitch, and bar lines | done, tested |
 | 2 | Rhythm rule | `src/neuma/rhythm.py` | `Score`, transposition | list of `NoteEvent(syllable, midi, units)`, rests included | done, tested |
 | 3 | Guide track | `src/neuma/guide.py`, `latin.py` | note events | `guide.wav`, the melody line, note timings | done, tested; `neuma guide <file.gabc>` |
-| 4 | Voice Changer | `src/neuma/elevenlabs.py` | `guide.wav`, voice id | `take.mp3` in the chosen voice | client done, tested; so far only called from `experiments/` (M3) |
-| 5 | Retune | `experiments/m0_retune.py` | `take.mp3`, melody line | `take.wav`, in tune | experiment (M3 makes it a module) |
+| 4 | Voice Changer | `src/neuma/elevenlabs.py` | `guide.wav`, voice id | `<voice>-raw.mp3` in the chosen voice | done, tested |
+| 5 | Retune | `src/neuma/retune.py` | raw take, melody line | `<voice>.wav`, in tune, plus a tuning report | done, tested |
 | 6 | Choir mix | - | several retuned takes | one mixed file with reverb | planned (M4) |
+
+`src/neuma/pipeline.py` runs steps 1-5 for one voice; `neuma sing <file.gabc>
+--voice <name>` is its command line.
 
 ## How each step works
 
@@ -73,7 +76,8 @@ treats pitch as intonation, not melody.
 **5. Retune.** Because timing survives, the melody can be put back. The gentle
 variant moves the take only by its slow pitch error (anything slower than
 150 ms) and leaves the voice's own fast movement alone, which sounds less
-robotic than imposing the melody line outright.
+robotic than imposing the melody line outright. The correction goes through
+the WORLD vocoder; a waveform method (PSOLA) was tried and sounded no better.
 
 ## ElevenLabs API
 
@@ -82,7 +86,7 @@ All calls are in `src/neuma/elevenlabs.py`. The key is read from the
 
 | Call | Purpose | Cost |
 |---|---|---|
-| `POST /v1/voice-changer/{voice_id}` | re-voice the guide | 1,000 credits per minute of input |
+| `POST /v1/voice-changer/{voice_id}` | re-voice the guide | documented as 1,000 credits per minute of input; measured about 800 on the free plan |
 | `GET /v1/voices` | list usable voices | free |
 | `GET /v1/user/subscription` | read remaining quota | free |
 
@@ -110,8 +114,8 @@ Nothing below is committed; `.cache/`, `out/` and `.env` are git-ignored.
 | `out/<chant>/guide.wav` | guide track | WAV, 22.05 kHz, 16-bit mono |
 | `out/<chant>/pitch.npy` | intended melody in Hz, one value per 5 ms | NumPy array |
 | `out/<chant>/notes.json` | start, end, pitch and syllable of every note | JSON |
-| `out/m0/sung-*.mp3` | copy of a Voice Changer take | MP3 |
-| `out/m0/sung-*-<variant>.wav` | retuned take | WAV, 44.1 kHz, 16-bit mono |
+| `out/<chant>/<voice>-raw.mp3` | copy of a Voice Changer take | MP3 |
+| `out/<chant>/<voice>.wav` | retuned take | WAV, 44.1 kHz, 16-bit mono |
 
 The caches are keyed by content, so they are safe to delete: spoken syllables
 are regenerated for free, Voice Changer takes cost credits again.
@@ -120,6 +124,8 @@ are regenerated for free, Voice Changer takes cost credits again.
 
 - Voice Changer does not preserve pitch, so step 5 is required, and it costs
   some naturalness: the result is in tune but still closer to robotic than human.
+- How far off Voice Changer lands varies from take to take: median errors of
+  300 cents and of 70 cents were both seen for the same refrain and voice.
 - The guide's speech source is macOS-only.
 - Pitch measurement near consonants is unreliable; tuning figures are medians
   over the middle of each note.

@@ -17,7 +17,8 @@ Work in progress.
 - [x] Read GABC into notes with pitch and length
 - [x] Render a guide track that carries the words and the melody
 - [x] One voice, refrain only, as a proof of concept
-- [ ] One voice, whole chant, from the command line
+- [x] One voice from the command line: GABC in, retuned take out
+- [ ] The whole chant, not only the refrain
 - [ ] A small choir with church reverb
 - [ ] Audio samples here
 
@@ -41,8 +42,9 @@ calls, and what is cached where.
 ## What I learned so far
 
 - Voice Changer treats pitch as intonation, not melody. Given a guide that is
-  in tune to a few cents, it returns notes 300 to 700 cents flat, with the
-  intervals bent. Timing and the shape of the melody survive.
+  in tune to a few cents, it returns notes anywhere from 70 to 700 cents off,
+  with the intervals bent, and differently on each take. Timing and the shape
+  of the melody survive.
 - Because timing survives, pitch can be corrected afterwards. Correcting only
   the slow pitch error, and leaving the voice's own fast movement alone, sounds
   better than imposing the melody outright.
@@ -71,10 +73,21 @@ uv run neuma guide chants/rorate-caeli/refrain.gabc
 It writes `out/refrain/guide.wav`. Useful options: `--transpose` (semitones),
 `--unit` (seconds per note), `--glide` (milliseconds between notes).
 
-The ElevenLabs step currently lives in `experiments/` and needs an API key in
-the `ELEVENLABS_API_KEY` environment variable, with access to Speech to Speech.
-Every response is cached on disk, and each run has a credit cap, so re-runs
-cost nothing.
+Singing needs an ElevenLabs API key in the `ELEVENLABS_API_KEY` environment
+variable, with access to Speech to Speech and read access to Voices:
+
+```bash
+uv run neuma voices
+```
+
+```bash
+uv run neuma sing chants/rorate-caeli/refrain.gabc --voice George --transpose -7 --max-credits 200
+```
+
+It writes `out/refrain/george.wav` and prints how far off the take was before
+and after retuning. The refrain costs about 125 credits. Every response is
+cached on disk, so re-runs cost nothing, and without `--max-credits` nothing is
+ever sent.
 
 ## Credits
 
@@ -82,5 +95,4 @@ cost nothing.
   are CC0. See [chants/README.md](chants/README.md).
 - Voices by [ElevenLabs](https://elevenlabs.io).
 - Pitch analysis and resynthesis use [WORLD](https://github.com/mmorise/World)
-  and [Praat](https://www.fon.hum.uva.nl/praat/) via
-  [Parselmouth](https://github.com/YannickJadoul/Parselmouth).
+  via [pyworld](https://github.com/JeremyCCHsu/Python-Wrapper-for-World-Vocoder).
