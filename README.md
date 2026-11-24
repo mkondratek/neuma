@@ -82,7 +82,8 @@ calls, and what is cached where.
   pitch and timing are added by rule.
 - **Speaking syllables one at a time has traps.** A voice handed "cta" alone
   spells out the letter ("fa-ci-ta est"); a lone "sa" was read as an
-  abbreviation; the Polish voice opens a rolled "r" with a burst louder than
+  abbreviation; the Italian voice reads a lone "us" as the English word
+  ("me-as" for "me-us"); the Polish voice opens a rolled "r" with a burst louder than
   the vowel ("y-ro-ra-te"), lets a final "i" trail into a hum ("cae-lum") and
   has a "p" too weak to hear ("nubes luant"). Voice Changer turns each into a
   confident wrong word. All of these are worked around, and `neuma check`
@@ -172,8 +173,8 @@ uv run neuma join out/refrain/choir.wav out/verse-1/choir.wav out/refrain/choir.
 
 - Chant transcriptions come from [GregoBase](https://gregobase.selapa.net/) and
   are CC0. See [chants/README.md](chants/README.md).
-- Voices by [ElevenLabs](https://elevenlabs.io), on the free plan: the samples
-  are for non-commercial use.
+- Voices by [ElevenLabs](https://elevenlabs.io). Part of the takes were made
+  on the free plan, so the samples are for non-commercial use.
 - The code is under the [MIT licence](LICENSE).
 - Pitch analysis and resynthesis use [WORLD](https://github.com/mmorise/World)
   via [pyworld](https://github.com/JeremyCCHsu/Python-Wrapper-for-World-Vocoder).
