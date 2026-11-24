@@ -21,6 +21,9 @@ from neuma.rhythm import NoteEvent
 FRAME_MS = guide_mod.FRAME_MS
 SONORANTS = "lmnrjwł"  # consonants that are loud and voiced like a vowel
 VOWELS = "aeiouyà"
+# A rolled r and the Polish voice's b, d and g begin with a stretch of voice
+# as loud as the vowel. It measures like a fault and, checked by ear, is not one.
+VOICED_ONSETS = "rbdg"
 SECOND_VOWEL_MS = 80  # a loud stretch this long outside the vowel is another syllable
 LOUD_ONSET_MS = 40  # shorter bursts before the vowel are ordinary
 BRIGHT_SHARE = 0.8  # of the vowel that must keep its upper formants
@@ -53,7 +56,7 @@ def _stray_sounds(spoken: str, syllable) -> list[str]:
         if end <= a and ms >= SECOND_VOWEL_MS:
             problems.append(f"{ms:.0f} ms of vowel-like sound before the part taken as the vowel; "
                             "the voice may be spelling the syllable out, or the wrong part is stretched")
-        elif end <= a and ms >= LOUD_ONSET_MS and "r" not in onset:  # a rolled r starts this way
+        elif end <= a and ms >= LOUD_ONSET_MS and not any(c in VOICED_ONSETS for c in onset):
             problems.append(f"{ms:.0f} ms of voice before the vowel, as loud as the vowel; it may be heard as m or n")
         elif start >= b and ms >= SECOND_VOWEL_MS and not any(c in SONORANTS for c in coda):
             problems.append(f"{ms:.0f} ms of vowel-like sound after the vowel; the voice may be adding a syllable")

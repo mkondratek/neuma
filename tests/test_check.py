@@ -41,13 +41,14 @@ def test_plain_syllables_pass():
 
 def test_voiced_burst_before_the_vowel_is_reported():
     burst = np.concatenate([buzz(0.06, 3), silence(0.03), buzz(0.2), silence(0.03)])
-    found = problems("(c4) da(f) te(g) (::)", da=burst)
+    found = problems("(c4) sa(f) te(g) (::)", sa=burst)
     assert len(found) == 1 and "ms of voice before the vowel" in found[0]
 
 
-def test_a_rolled_r_may_start_with_a_burst():
+@pytest.mark.parametrize("syllable", ["ra", "da", "go", "bi"])
+def test_a_rolled_r_or_a_voiced_stop_may_start_with_a_burst(syllable):
     burst = np.concatenate([buzz(0.06, 3), silence(0.03), buzz(0.2), silence(0.03)])
-    assert problems("(c4) ra(f) te(g) (::)", ra=burst) == []
+    assert problems(f"(c4) {syllable}(f) te(g) (::)", **{syllable: burst}) == []
 
 
 def test_spelled_out_syllable_is_reported():
@@ -72,10 +73,10 @@ def test_back_vowels_are_not_judged_for_brightness():
 
 def test_findings_say_where_and_excerpts_can_be_heard():
     burst = np.concatenate([buzz(0.06, 3), silence(0.03), buzz(0.2), silence(0.03)])
-    events = note_events(parse("(c4) la(f) da(g) te(h) (::)"))
-    guide, findings = check(events, speak=speaker(da=burst), unit_s=0.3)
+    events = note_events(parse("(c4) la(f) sa(g) te(h) (::)"))
+    guide, findings = check(events, speak=speaker(sa=burst), unit_s=0.3)
     (finding,) = findings
-    assert finding.written == "da"
+    assert finding.written == "sa"
     assert finding.start_s == pytest.approx(guide.notes[1].start_s)
     clip = excerpts(guide, findings, margin_s=0.1)
     assert len(clip) == pytest.approx((0.3 + 0.2 + 0.5) * SAMPLE_RATE, rel=0.05)
