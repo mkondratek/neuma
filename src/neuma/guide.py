@@ -31,11 +31,6 @@ MIN_VOWEL_FRAMES = 12  # 60 ms
 SHORTEST_VOWEL_FRAMES = 16  # 80 ms; a louder spoken stretch shorter than this is not the vowel
 P_CLOSURE_FRAMES = 12  # 60 ms of silence before the burst of a p
 MIN_VOWEL_SHARE = 0.5  # of a syllable's time; consonants are shortened to make room
-VOWEL_LETTERS = "aeiouyà"  # in a spoken spelling
-ACCENTED = "áéíóúýǽ"
-SWELL_FRAMES = 60  # 300 ms: an accent is a swell, not a step
-# Options of ``render`` that together make the line legato (``neuma guide --legato``).
-LEGATO = {"sustain": 1.0, "consonant_ms": 120, "join_ms": 40, "accent_db": 3}
 
 Speaker = Callable[[str], np.ndarray]  # spelling -> mono float64 at SAMPLE_RATE
 
@@ -205,15 +200,12 @@ def _resize(part: np.ndarray, length: int) -> np.ndarray:
     return part[np.round(np.linspace(0, len(part) - 1, length)).astype(int)]
 
 
-def _consonant_lengths(groups, syllables, unit, *, most=None, open_ended=None) -> tuple[list[int], list[int]]:
+def _consonant_lengths(groups, syllables, unit) -> tuple[list[int], list[int]]:
     """Frames each syllable may spend on its onset and tail consonants.
 
     Spoken in isolation, a syllable has long consonants. A sung note is mostly
     vowel, so where a tail and the next onset would take more than their share
-    of a note, both are shortened in proportion. ``most`` caps that share in
-    frames. ``open_ended`` marks syllables that end in their vowel: what
-    follows the vowel there is only the voice dying away, and it is dropped
-    when another syllable follows, so the vowel is carried into it.
+    of a note, both are shortened in proportion.
     """
     onsets = [s.onset if s else 0 for s in syllables]
     tails = [s.tail if s else 0 for s in syllables]
@@ -222,11 +214,7 @@ def _consonant_lengths(groups, syllables, unit, *, most=None, open_ended=None) -
             continue
         total = sum(round(e.units * unit) for e in group)
         room = total - max(MIN_VOWEL_FRAMES, round(total * MIN_VOWEL_SHARE))
-        if most is not None:
-            room = min(room, most)
         follows = i + 1 < len(groups) and syllables[i + 1] is not None
-        if follows and open_ended and open_ended[i]:
-            tails[i] = 0
         wanted = tails[i] + (onsets[i + 1] if follows else 0)
         if wanted > room:
             scale = max(room, 0) / wanted
@@ -247,34 +235,6 @@ def _group(events: list[NoteEvent]) -> list[list[NoteEvent]]:
     return groups
 
 
-def _stressed(sung: list[list[NoteEvent]]) -> list[bool]:
-    """Which syllables carry the word accent: the one written with an acute,
-    or the first of a two-syllable word, where chant books leave the mark out."""
-    out: list[bool] = []
-    words: list[list[str]] = []
-    for group in sung:
-        if group[0].starts_word or not words:
-            words.append([])
-        words[-1].append(group[0].syllable)
-    for word in words:
-        marked = [any(c in ACCENTED for c in syl.lower()) for syl in word]
-        if not any(marked) and len(word) == 2:
-            marked = [True, False]
-        out += marked
-    return out
-
-
-def _join(sp: np.ndarray, ap: np.ndarray, voiced: np.ndarray, at: int, frames: int) -> None:
-    """Let the sound before frame ``at`` turn gradually into the one at it,
-    where the voice does not stop in between."""
-    a = at - frames
-    if frames < 1 or a < 0 or at >= len(sp) or not voiced[a : at + 1].all():
-        return
-    w = np.linspace(0, 1, frames + 1)[:, None]
-    sp[a : at + 1] = np.exp((1 - w) * np.log(sp[a]) + w * np.log(sp[at]))
-    ap[a : at + 1] = (1 - w) * ap[a] + w * ap[at]
-
-
 def render(
     events: list[NoteEvent],
     *,
@@ -283,22 +243,9 @@ def render(
     speak: Speaker | None = None,
     latin: str = "roman",
     seed: int = 0,
-    sustain: float = 0.0,
-    consonant_ms: float | None = None,
-    join_ms: float = 0.0,
-    accent_db: float = 0.0,
 ) -> Guide:
     """``unit_s`` is the length of a plain note; ``glide_ms`` the note-to-note glide;
-    ``latin`` the pronunciation (see ``neuma.latin``), which also picks the voice.
-
-    The last four make the line legato, and all are off by default.
-    ``sustain`` (0 to 1) holds a vowel at one level instead of letting it die
-    away as it does in speech. ``consonant_ms`` is the most time a syllable's
-    closing consonants and the next one's opening consonants may take together.
-    ``join_ms`` carries an open syllable's vowel into the next syllable over
-    that many milliseconds. ``accent_db`` is how far unaccented syllables sit
-    below accented ones.
-    """
+    ``latin`` the pronunciation (see ``neuma.latin``), which also picks the voice."""
     speak = speak or mac_say(VOICES.get(latin, "Alice"))
     groups = _group(events)
     while groups and groups[-1][0].is_rest:  # trailing silence would only cost credits
@@ -309,19 +256,12 @@ def render(
     spellings = spoken([g[0].syllable for g in sung], [g[0].starts_word for g in sung], latin)
     voices = iter(_analyse(speak(s), s) for s in spellings)
     syllables = [None if g[0].is_rest else next(voices) for g in groups]
-    per_sung = iter(zip(spellings, _stressed(sung)))
-    spelling, stressed = zip(*[("", False) if g[0].is_rest else next(per_sung) for g in groups])
     bins = next(s for s in syllables if s).sp.shape[1]
     unit = unit_s / FRAME_S
 
-    onsets, tails = _consonant_lengths(
-        groups, syllables, unit,
-        most=None if consonant_ms is None else round(consonant_ms / FRAME_MS),
-        open_ended=[join_ms > 0 and s[-1:] in tuple(VOWEL_LETTERS) for s in spelling],
-    )
+    onsets, tails = _consonant_lengths(groups, syllables, unit)
 
     sp, ap, voiced, steps, notes = [], [], [], [], []
-    joins, level = [], []  # frames where one syllable meets the next; dB per frame
     frames = 0
 
     def emit(part_sp, part_ap, part_voiced, part_steps):
@@ -340,7 +280,6 @@ def render(
             # entry after a pause is not a glide from the previous phrase.
             upcoming = groups[i + 1][0].midi if i + 1 < len(groups) else steps[-1][-1]
             emit(np.full((n, bins), 1e-12), np.ones((n, bins)), np.zeros(n), np.full(n, upcoming))
-            level.append(np.full(n, -accent_db))
             continue
 
         a, b = syl.vowel
@@ -349,31 +288,20 @@ def render(
         # A note starts on its vowel: consonants take their time from the end
         # of the previous vowel, as singers do.
         onset, tail = onsets[i], tails[i]
-        if i and syllables[i - 1] is not None:
-            joins.append(frames)
         emit(_resize(syl.sp[:a], onset), _resize(syl.ap[:a], onset),
              _resize(syl.voiced[:a], onset), np.full(onset, pitches[0]))
         start = frames
         vowel = max(sum(lengths) - tail - next_onset, MIN_VOWEL_FRAMES)
         k = np.arange(vowel + tail)
         line = pitches[np.minimum(np.searchsorted(np.cumsum(lengths), k, side="right"), len(group) - 1)]
-        held = syl.sp[a:b] * syl.sp[a:b].sum(axis=1, keepdims=True) ** -sustain  # the mean is 1
-        emit(_stretch(held, vowel), _stretch(syl.ap[a:b], vowel), np.ones(vowel), line[:vowel])
+        emit(_stretch(syl.sp[a:b], vowel), _stretch(syl.ap[a:b], vowel), np.ones(vowel), line[:vowel])
         emit(_resize(syl.sp[b:], tail), _resize(syl.ap[b:], tail), _resize(syl.voiced[b:], tail), line[vowel:])
-        level.append(np.full(onset + vowel + tail, 0.0 if stressed[i] else -accent_db))
         for e, n in zip(group, lengths):
             notes.append(TimedNote(start * FRAME_S, (start + n) * FRAME_S, float(midi_to_hz(e.midi)), e.syllable))
             start += n
 
     sp, ap = np.concatenate(sp), np.concatenate(ap)
     voiced = np.concatenate(voiced)
-    for at in joins:
-        _join(sp, ap, voiced, at, round(join_ms / FRAME_MS))
-    if accent_db:
-        swell = np.hanning(SWELL_FRAMES) / np.hanning(SWELL_FRAMES).sum()
-        level = np.concatenate(level)
-        level = np.convolve(np.pad(level, SWELL_FRAMES, mode="edge"), swell, mode="same")[SWELL_FRAMES:-SWELL_FRAMES]
-        sp = sp * 10 ** (level[:, None] / 10)
     line = glide(np.concatenate(steps), glide_ms) + _drift(frames, seed)
     pitch_hz = midi_to_hz(line)
 

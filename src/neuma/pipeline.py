@@ -36,12 +36,10 @@ def render_guide(
     glide_ms: float = 80,
     speak: guide_mod.Speaker | None = None,
     latin: str = "roman",
-    **phrasing,
 ) -> guide_mod.Guide:
-    """Write ``guide.wav``, ``pitch.npy`` and ``notes.json`` into ``out_dir``.
-    ``phrasing`` is passed to ``guide.render`` (see ``guide.LEGATO``)."""
+    """Write ``guide.wav``, ``pitch.npy`` and ``notes.json`` into ``out_dir``."""
     events = note_events(parse(gabc.read_text()), transpose=transpose)
-    result = guide_mod.render(events, unit_s=unit_s, glide_ms=glide_ms, speak=speak, latin=latin, **phrasing)
+    result = guide_mod.render(events, unit_s=unit_s, glide_ms=glide_ms, speak=speak, latin=latin)
     out_dir.mkdir(parents=True, exist_ok=True)
     result.write(out_dir / "guide.wav")
     np.save(out_dir / "pitch.npy", result.pitch_hz)

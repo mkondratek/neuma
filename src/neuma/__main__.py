@@ -30,13 +30,11 @@ def _guide_options(args) -> dict:
         "glide_ms": args.glide,
         "speak": guide.mac_say(args.say_voice or latin.VOICES[args.latin]),
         "latin": args.latin,
-        **(guide.LEGATO if args.legato else {}),
     }
 
 
 def _out_dir(args) -> Path:
     name = Path(args.gabc).stem + ("" if args.latin == "roman" else f"-{args.latin}")
-    name += "-legato" if args.legato else ""
     return Path(args.out or Path("out") / name)
 
 
@@ -147,8 +145,6 @@ def main() -> None:
         c.add_argument("--glide", type=float, default=80, help="glide between notes, ms")
         c.add_argument("--latin", choices=sorted(latin.VOICES), default="roman",
                        help="pronunciation: roman (Italianate, 'che-li') or polish ('tse-li')")
-        c.add_argument("--legato", action="store_true",
-                       help="held vowels, short consonants, joined syllables, word accents (a different guide: takes are sung anew)")
         c.add_argument("--say-voice", help="macOS voice that speaks the syllables (default: Alice for roman, Zosia for polish)")
 
     g = sub.add_parser("guide", help="render the guide track for a GABC file (free, local)")

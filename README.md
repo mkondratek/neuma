@@ -92,10 +92,10 @@ calls, and what is cached where.
   free month, which is why the sample stops after verse 1.
 - **It is not legato.** Chant wants one sustained line; the guide is built
   syllable by syllable from speech, so vowels die away and syllables stand
-  apart. `--legato` holds the vowels, shortens consonants, joins syllables
-  and lifts the accented ones. The guide's loudness curve is measurably
-  smoother with it, but to our ears it sounds the same, and no take has been
-  sung from it yet, so it is off by default.
+  apart. A guide with held vowels, shorter consonants, joined syllables and
+  lifted accents was tried: the sung take's loudness was measurably
+  smoother (notes fading by 4 dB instead of 10), and it sounded worse. The
+  measurement was not measuring legato, so the attempt was taken out.
 - **macOS only**, because the guide uses the system's `say` voices.
 
 ## Try it
@@ -119,8 +119,7 @@ uv run neuma guide chants/rorate-caeli/refrain.gabc
 ```
 
 It writes `out/refrain/guide.wav`. Useful options: `--transpose` (semitones),
-`--unit` (seconds per note), `--glide` (milliseconds between notes),
-`--legato` (an experimental smoother line; output goes to `out/refrain-legato/`).
+`--unit` (seconds per note), `--glide` (milliseconds between notes).
 
 Check a guide for syllables the speech voice got wrong. Also local and free;
 it prints what it measured and writes the flagged places to
