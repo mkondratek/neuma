@@ -122,3 +122,21 @@ def mix(
     if wet > 0:
         stereo = reverb(stereo, sample_rate, decay_s=decay_s, wet=wet, seed=seed)
     return stereo * 0.7 / np.abs(stereo).max()
+
+
+def join(pieces: list[np.ndarray], sample_rate: int, *, overlap_s: float = 2.5) -> np.ndarray:
+    """Put mixed pieces one after another, e.g. refrain, verse, refrain.
+
+    Each piece ends in its reverb tail, so the next one starts ``overlap_s``
+    before the previous file ends: the tail rings on under the new entry, as
+    it would in a church, and the pause stays about a breath long.
+    """
+    overlap = int(overlap_s * sample_rate)
+    starts, end = [], 0
+    for piece in pieces:
+        starts.append(max(end - overlap, 0))
+        end = starts[-1] + len(piece)
+    out = np.zeros((end,) + pieces[0].shape[1:])
+    for start, piece in zip(starts, pieces):
+        out[start : start + len(piece)] += piece
+    return out * 0.7 / np.abs(out).max()

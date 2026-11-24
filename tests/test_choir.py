@@ -74,3 +74,16 @@ def test_mix_without_reverb_keeps_the_length():
 def test_one_voice_is_centred():
     out = choir.mix([tone()], SR, wet=0)
     assert np.allclose(out[:, 0], out[:, 1])
+
+
+def test_join_overlaps_each_piece_with_the_tail_before_it():
+    a = np.stack([tone(seconds=1.0)] * 2, axis=1)
+    b = np.stack([tone(330, seconds=0.5)] * 2, axis=1)
+    out = choir.join([a, b, a], SR, overlap_s=0.2)
+    assert out.shape == (22050 + 11025 + 22050 - 2 * 4410, 2)
+    assert np.isclose(np.abs(out).max(), 0.7)
+
+
+def test_join_never_starts_before_the_beginning():
+    short = np.stack([tone(seconds=0.1)] * 2, axis=1)
+    assert len(choir.join([short, short], SR, overlap_s=1.0)) == len(short)

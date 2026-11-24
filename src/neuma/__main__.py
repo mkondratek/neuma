@@ -4,6 +4,7 @@
     neuma voices                                          quota and voices
     neuma sing chants/rorate-caeli/refrain.gabc --voice George --max-credits 200
     neuma choir chants/rorate-caeli/refrain.gabc --voices George,Brian,Bill,Daniel --max-credits 600
+    neuma join out/refrain/choir.wav out/verse-1/choir.wav out/refrain/choir.wav --out out/rorate.mp3
 """
 
 from __future__ import annotations
@@ -13,7 +14,9 @@ import re
 import sys
 from pathlib import Path
 
-from neuma import guide, latin, pipeline
+import soundfile as sf
+
+from neuma import choir, guide, latin, pipeline
 from neuma.elevenlabs import BudgetExceeded, ElevenLabs, voice_changer_credits
 
 
@@ -101,6 +104,16 @@ def cmd_choir(args) -> None:
     print(result.mix)
 
 
+def cmd_join(args) -> None:
+    pieces, rates = zip(*(sf.read(path, dtype="float64", always_2d=True) for path in args.files))
+    if len(set(rates)) != 1 or len({p.shape[1] for p in pieces}) != 1:
+        sys.exit("the files differ in sample rate or channels")
+    joined = choir.join(list(pieces), rates[0], overlap_s=args.overlap)
+    Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+    sf.write(args.out, joined, rates[0])  # the format follows the extension: .wav, .mp3, .flac
+    print(f"{args.out}: {len(joined) / rates[0]:.1f}s")
+
+
 def main() -> None:
     p = argparse.ArgumentParser(prog="neuma", description="Gregorian chant, sung by ElevenLabs voices")
     sub = p.add_subparsers(dest="command", required=True)
@@ -144,6 +157,13 @@ def main() -> None:
     c.add_argument("--wet", type=float, default=0.3, help="share of reverb in the mix, 0 to 1")
     c.add_argument("--seed", type=int, default=0, help="changes who stands where and who is early")
     c.set_defaults(fn=cmd_choir)
+
+    j = sub.add_parser("join", help="put mixed pieces one after another (free, local)")
+    j.add_argument("files", nargs="+", help="audio files in sung order; a file may repeat")
+    j.add_argument("--out", required=True, help="file to write (.wav or .mp3)")
+    j.add_argument("--overlap", type=float, default=2.5,
+                   help="seconds of the previous piece's reverb tail under the next entry")
+    j.set_defaults(fn=cmd_join)
 
     args = p.parse_args()
     args.fn(args)
