@@ -18,8 +18,8 @@ def make_client(tmp_path, max_credits, calls):
 
 
 def test_credits_are_duration_based():
-    assert voice_changer_credits(60) == 1000
-    assert voice_changer_credits(9.3) == 155
+    assert voice_changer_credits(60) == 1200
+    assert voice_changer_credits(9.3) == 186
 
 
 def test_second_identical_call_is_served_from_disk(tmp_path):

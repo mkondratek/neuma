@@ -17,7 +17,7 @@ from pathlib import Path
 import httpx
 
 API = "https://api.elevenlabs.io"
-VOICE_CHANGER_CREDITS_PER_MINUTE = 1000  # documented: duration-based, 1000 per minute
+VOICE_CHANGER_CREDITS_PER_MINUTE = 1200  # measured on the free plan (558 for three 9.3 s calls); documented as 1000
 
 
 class BudgetExceeded(RuntimeError):
