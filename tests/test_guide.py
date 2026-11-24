@@ -4,7 +4,8 @@ import pyworld as pw
 
 from neuma.gabc import parse
 from neuma.guide import FRAME_MS, FRAME_S, P_CLOSURE_FRAMES, SAMPLE_RATE, _analyse, _vowel, glide, midi_to_hz, render
-from neuma.rhythm import note_events
+from neuma import guide as guide_mod
+from neuma.rhythm import NoteEvent, note_events
 
 
 def fake_speaker(text: str) -> np.ndarray:
@@ -164,3 +165,41 @@ def test_p_gets_a_silence_before_its_burst():
     assert not with_p.voiced[:P_CLOSURE_FRAMES].any()
     closure = with_p.sp[:P_CLOSURE_FRAMES].sum(axis=1).max()
     assert closure < 1e-3 * with_p.sp[slice(*with_p.vowel)].sum(axis=1).mean()
+
+
+# --- legato -----------------------------------------------------------------
+
+
+def test_accent_falls_on_the_marked_syllable_or_the_first_of_two():
+    def word(*syllables):
+        return [[NoteEvent(s, 60, 1.0, starts_syllable=True, starts_word=k == 0)] for k, s in enumerate(syllables)]
+
+    sung = word("Ro", "rá", "te") + word("cae", "li") + word("et")
+    assert guide_mod._stressed(sung) == [False, True, False, True, False, False]
+
+
+def test_join_morphs_only_where_the_voice_does_not_stop():
+    sp = np.concatenate([np.full((10, 4), 1.0), np.full((10, 4), 4.0)])
+    ap = np.zeros_like(sp)
+    voiced = np.ones(20, bool)
+    guide_mod._join(sp, ap, voiced, 10, 4)
+    assert np.allclose(sp[6:11, 0], [1.0, 2**0.5, 2.0, 2 * 2**0.5, 4.0])
+
+    sp = np.concatenate([np.full((10, 4), 1.0), np.full((10, 4), 4.0)])
+    voiced[10] = False  # a stop: nothing to carry the vowel into
+    guide_mod._join(sp, ap, voiced, 10, 4)
+    assert (sp[:10] == 1.0).all()
+
+
+def test_open_syllable_loses_its_dying_tail_only_before_another_syllable():
+    syl = guide_mod._Spoken(np.ones((60, 4)), np.ones((60, 4)), np.ones(60, bool), (10, 40))
+    groups = [[NoteEvent("ra", 60, 1.0, starts_syllable=True)], [NoteEvent("te", 60, 1.0, starts_syllable=True)]]
+    _, tails = guide_mod._consonant_lengths(groups, [syl, syl], 72, open_ended=[True, True])
+    assert tails == [0, 20]
+
+
+def test_consonants_are_capped():
+    syl = guide_mod._Spoken(np.ones((60, 4)), np.ones((60, 4)), np.ones(60, bool), (10, 40))
+    groups = [[NoteEvent("an", 60, 3.0, starts_syllable=True)], [NoteEvent("te", 60, 3.0, starts_syllable=True)]]
+    onsets, tails = guide_mod._consonant_lengths(groups, [syl, syl], 72, most=15)
+    assert tails[0] + onsets[1] == 15

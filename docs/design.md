@@ -85,6 +85,13 @@ carry the words.
   stretches only the vowel to the note lengths, and replaces the spoken pitch
   with the melody. A note starts on its vowel; consonants take their time from
   the end of the previous note and are shortened if they would crowd it.
+- `--legato` (off by default) switches on four things: each vowel is held
+  at one level; the consonants between two vowels get 120 ms at most; an
+  open syllable loses the dying end of its vowel and morphs into the next
+  syllable over 40 ms; unaccented syllables sit 3 dB under accented ones
+  (the acute in the text, or the first of two syllables). On the refrain
+  the median fade within a note goes from 5 dB to under 1 dB. It is a
+  different guide, so nothing sung before is reused.
 - The melody line is the stepped note pitches passed through a second-order
   low-pass filter, which joins notes with a short glide (80 ms by default).
 
@@ -167,6 +174,8 @@ are regenerated for free, Voice Changer takes cost credits again.
   voice: median errors from 70 to 750 cents were seen.
 - The choir's differences in pitch and timing are added by rule. All voices
   still share one guide, so they breathe and shape every syllable identically.
+- The line is not legato: syllables come from speech, one at a time.
+  `--legato` smooths the guide's loudness, with no audible gain so far.
 - The guide's speech source is macOS-only.
 - Pitch measurement near consonants is unreliable; tuning figures are medians
   over the middle of each note.
