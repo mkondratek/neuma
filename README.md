@@ -17,8 +17,8 @@ Voices by [elevenlabs.io](https://elevenlabs.io).
 
 | Sample | What it is |
 |---|---|
-| [rorate-caeli-choir.mp3](samples/rorate-caeli-choir.mp3) | Refrain, verse 1, refrain. Four voices, church reverb, Polish-style Latin. 64 s |
-| [refrain-choir-roman.mp3](samples/refrain-choir-roman.mp3) | The refrain as a choir in Roman (Italianate) Latin, for comparison |
+| [rorate-caeli-choir.mp3](samples/rorate-caeli-choir.mp3) | Refrain, verse 1, refrain. Four voices, church reverb, Roman (Italianate) Latin. 64 s |
+| [rorate-caeli-choir-polish.mp3](samples/rorate-caeli-choir-polish.mp3) | The same in Polish-style Latin, for comparison |
 | [refrain-one-voice.mp3](samples/refrain-one-voice.mp3) | One voice, retuned, no reverb: what the choir is made of |
 | [refrain-one-voice-before-retuning.mp3](samples/refrain-one-voice-before-retuning.mp3) | The same take as ElevenLabs returned it: human, and out of tune |
 | [refrain-guide.mp3](samples/refrain-guide.mp3) | The local guide track that ElevenLabs was given |
@@ -62,7 +62,7 @@ calls, and what is cached where.
 
 - **Voice Changer does not sing the melody it is given.** It treats pitch as
   intonation. From a guide that is in tune to a few cents it returns notes
-  with a median error of 70 to 600 cents, with the intervals bent, differently
+  with a median error of 70 to 750 cents, with the intervals bent, differently
   for each voice and each take. Without step 5 there is no chant.
 - **A single voice still sounds processed.** The retune rebuilds the voice in
   a vocoder, and the heavier the correction, the more that is heard. Nothing
@@ -148,5 +148,6 @@ uv run neuma join out/refrain/choir.wav out/verse-1/choir.wav out/refrain/choir.
   are CC0. See [chants/README.md](chants/README.md).
 - Voices by [ElevenLabs](https://elevenlabs.io), on the free plan: the samples
   are for non-commercial use.
+- The code is under the [MIT licence](LICENSE).
 - Pitch analysis and resynthesis use [WORLD](https://github.com/mmorise/World)
   via [pyworld](https://github.com/JeremyCCHsu/Python-Wrapper-for-World-Vocoder).

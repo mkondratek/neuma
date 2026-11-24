@@ -147,7 +147,7 @@ are regenerated for free, Voice Changer takes cost credits again.
 - Voice Changer does not preserve pitch, so step 5 is required, and it costs
   some naturalness: the result is in tune but still closer to robotic than human.
 - How far off Voice Changer lands varies from take to take and from voice to
-  voice: median errors from 70 to 600 cents were seen.
+  voice: median errors from 70 to 750 cents were seen.
 - The choir's differences in pitch and timing are added by rule. All voices
   still share one guide, so they breathe and shape every syllable identically.
 - The guide's speech source is macOS-only.
