@@ -47,6 +47,8 @@ it checks the cache and the credit cap, uploads the guide, and saves the reply.
 --voice <name>`) and steps 1-6 for several (`neuma choir <file.gabc> --voices
 <name>,<name>`). A choir repeats steps 4 and 5 once per voice, with the same
 guide; step 6 is local and can be redone with other settings for free.
+`neuma join <files> --out <file>` puts mixed pieces in order (refrain, verse,
+refrain), starting each one under the reverb tail of the one before.
 
 ## How each step works
 
@@ -121,7 +123,8 @@ Two guards sit in front of the network:
 
 ## Files on disk
 
-Nothing below is committed; `.cache/`, `out/` and `.env` are git-ignored.
+`.cache/`, `out/` and `.env` are git-ignored; only `samples/` is committed.
+With `--latin polish` the output directory is `out/<chant>-polish/`.
 
 | Path | What | Format |
 |---|---|---|
@@ -134,6 +137,7 @@ Nothing below is committed; `.cache/`, `out/` and `.env` are git-ignored.
 | `out/<chant>/<voice>-raw.mp3` | copy of a Voice Changer take | MP3 |
 | `out/<chant>/<voice>.wav` | retuned take | WAV, 44.1 kHz, 16-bit mono |
 | `out/<chant>/choir.wav` | the mixed choir | WAV, 44.1 kHz, 16-bit stereo |
+| `samples/*.mp3` | the samples linked from the README; the only audio that is committed | MP3, stereo or mono |
 
 The caches are keyed by content, so they are safe to delete: spoken syllables
 are regenerated for free, Voice Changer takes cost credits again.
@@ -143,7 +147,7 @@ are regenerated for free, Voice Changer takes cost credits again.
 - Voice Changer does not preserve pitch, so step 5 is required, and it costs
   some naturalness: the result is in tune but still closer to robotic than human.
 - How far off Voice Changer lands varies from take to take and from voice to
-  voice: median errors from 70 to 350 cents were seen for the same refrain.
+  voice: median errors from 70 to 600 cents were seen.
 - The choir's differences in pitch and timing are added by rule. All voices
   still share one guide, so they breathe and shape every syllable identically.
 - The guide's speech source is macOS-only.
