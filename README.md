@@ -18,8 +18,8 @@ Voices by [elevenlabs.io](https://elevenlabs.io).
 
 | Sample | What it is |
 |---|---|
-| [rorate-caeli-choir.mp3](docs/samples/rorate-caeli-choir.mp3) | Refrain, verse 1, refrain. Four voices, church reverb, Roman (Italianate) Latin. 64 s |
-| [rorate-caeli-choir-polish.mp3](docs/samples/rorate-caeli-choir-polish.mp3) | The same in Polish-style Latin, for comparison |
+| [rorate-caeli-choir.mp3](docs/samples/rorate-caeli-choir.mp3) | The whole chant: the refrain and all four verses. Four voices, church reverb, Roman (Italianate) Latin. 3 min 33 s |
+| [rorate-caeli-choir-polish.mp3](docs/samples/rorate-caeli-choir-polish.mp3) | The refrain alone in Polish-style Latin, for comparison |
 | [refrain-one-voice.mp3](docs/samples/refrain-one-voice.mp3) | One voice, retuned, no reverb: what the choir is made of |
 | [refrain-one-voice-before-retuning.mp3](docs/samples/refrain-one-voice-before-retuning.mp3) | The same take as ElevenLabs returned it: human, and out of tune |
 | [refrain-guide.mp3](docs/samples/refrain-guide.mp3) | The local guide track that ElevenLabs was given |
@@ -59,7 +59,9 @@ calls, and what is cached where.
 - **The choir hides the seams.** Four voices and a long reverb cover most of
   what sounds artificial in a single take.
 - **A speech voice of the right language as the source of the words.** Church
-  Latin read as Italian, or as Polish, is nearly right without any phonetics.
+  Latin read as Italian is nearly right without any phonetics. Read as Polish
+  it took many more repairs (see below), which is why only the refrain is
+  given in that style.
 - **Caching every response.** All the mixing, joining and listening tests after
   a take is sung cost nothing.
 
@@ -88,8 +90,8 @@ calls, and what is cached where.
   and a new chant can bring new ones.
 - **It is not cheap on a free plan.** Voice Changer cost about 1,200 credits
   per minute of audio (documented: 1,000). Four voices singing the whole
-  chant, about two and a half minutes, need more than the 10,000 credits of a
-  free month, which is why the sample stops after verse 1.
+  chant, three and a half minutes, took about 17,000 credits: more than the
+  10,000 of a free month, so the sample was finished on a paid one.
 - **It is not legato.** Chant wants one sustained line; the guide is built
   syllable by syllable from speech, so vowels die away and syllables stand
   apart. A guide with held vowels, shorter consonants, joined syllables and
