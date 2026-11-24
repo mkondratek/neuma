@@ -21,7 +21,7 @@ import numpy as np
 import pyworld as pw
 import soundfile as sf
 
-from neuma.latin import spoken
+from neuma.latin import VOICES, spoken
 from neuma.rhythm import NoteEvent
 
 SAMPLE_RATE = 22050
@@ -217,17 +217,19 @@ def render(
     unit_s: float = 0.36,
     glide_ms: float = 80,
     speak: Speaker | None = None,
+    latin: str = "roman",
     seed: int = 0,
 ) -> Guide:
-    """``unit_s`` is the length of a plain note; ``glide_ms`` the note-to-note glide."""
-    speak = speak or mac_say()
+    """``unit_s`` is the length of a plain note; ``glide_ms`` the note-to-note glide;
+    ``latin`` the pronunciation (see ``neuma.latin``), which also picks the voice."""
+    speak = speak or mac_say(VOICES.get(latin, "Alice"))
     groups = _group(events)
     while groups and groups[-1][0].is_rest:  # trailing silence would only cost credits
         groups.pop()
     sung = [g for g in groups if not g[0].is_rest]
     if not sung:
         raise ValueError("no notes to sing")
-    spellings = spoken([g[0].syllable for g in sung], [g[0].starts_word for g in sung])
+    spellings = spoken([g[0].syllable for g in sung], [g[0].starts_word for g in sung], latin)
     voices = iter(_analyse(speak(s), s) for s in spellings)
     syllables = [None if g[0].is_rest else next(voices) for g in groups]
     bins = next(s for s in syllables if s).sp.shape[1]

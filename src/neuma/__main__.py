@@ -13,7 +13,7 @@ import re
 import sys
 from pathlib import Path
 
-from neuma import guide, pipeline
+from neuma import guide, latin, pipeline
 from neuma.elevenlabs import BudgetExceeded, ElevenLabs, voice_changer_credits
 
 
@@ -22,12 +22,14 @@ def _guide_options(args) -> dict:
         "transpose": args.transpose,
         "unit_s": args.unit,
         "glide_ms": args.glide,
-        "speak": guide.mac_say(args.say_voice),
+        "speak": guide.mac_say(args.say_voice or latin.VOICES[args.latin]),
+        "latin": args.latin,
     }
 
 
 def _out_dir(args) -> Path:
-    return Path(args.out or Path("out") / Path(args.gabc).stem)
+    name = Path(args.gabc).stem + ("" if args.latin == "roman" else f"-{args.latin}")
+    return Path(args.out or Path("out") / name)
 
 
 def cmd_guide(args) -> None:
@@ -109,7 +111,9 @@ def main() -> None:
         c.add_argument("--transpose", type=int, default=0, help="semitones from notated pitch")
         c.add_argument("--unit", type=float, default=0.36, help="seconds per plain note")
         c.add_argument("--glide", type=float, default=80, help="glide between notes, ms")
-        c.add_argument("--say-voice", default="Alice", help="macOS voice that speaks the syllables")
+        c.add_argument("--latin", choices=sorted(latin.VOICES), default="roman",
+                       help="pronunciation: roman (Italianate, 'che-li') or polish ('tse-li')")
+        c.add_argument("--say-voice", help="macOS voice that speaks the syllables (default: Alice for roman, Zosia for polish)")
 
     g = sub.add_parser("guide", help="render the guide track for a GABC file (free, local)")
     chant_options(g)

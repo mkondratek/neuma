@@ -61,9 +61,15 @@ rests. The table is in the module docstring.
 **3. Guide track.** Voice Changer takes audio only, no text, so the guide must
 carry the words.
 
-- Each syllable is respelled where Latin and Italian spelling differ (`cae` to
-  `ce`, `ju` to `iu`) and spoken by a macOS Italian voice (`say`), which is
-  free. Church Latin is pronounced like Italian.
+- Each syllable is respelled and spoken by a macOS voice (`say`), which is
+  free. Two pronunciations are offered (`--latin`): `roman`, where an Italian
+  voice reads Latin nearly as written (`cae` becomes `ce`, `ju` becomes `iu`),
+  and `polish`, where a Polish voice gets `c` as "ts" for free and has to be
+  kept from reading Latin the Polish way (`ci` becomes `tsji`, `qui` `kwi`).
+- Syllables are spoken alone, so a voice can misread one: spell out a cluster
+  it cannot start a word with (`cta` as "ci-ta") or expand an abbreviation.
+  `ct`, `pt` and `ps` are therefore divided for speech (`fac-ta`), and every
+  syllable of the chant was checked for having exactly one vowel.
 - The WORLD vocoder splits each syllable into onset consonants, vowel and tail,
   stretches only the vowel to the note lengths, and replaces the spoken pitch
   with the melody. A note starts on its vowel; consonants take their time from

@@ -8,14 +8,14 @@ from neuma.latin import spoken
 CHANT = Path(__file__).parent.parent / "chants" / "rorate-caeli"
 
 
-def say(words: str) -> list[str]:
+def say(words: str, style: str = "roman") -> list[str]:
     """``"gra-ti-a ple-na"`` -> spoken spellings, with word boundaries at spaces."""
     syllables, starts = [], []
     for word in words.split():
         for i, syl in enumerate(word.split("-")):
             syllables.append(syl)
             starts.append(i == 0)
-    return spoken(syllables, starts)
+    return spoken(syllables, starts, style)
 
 
 def test_refrain_of_rorate_caeli():
@@ -88,3 +88,30 @@ def test_syllable_without_letters_is_an_error():
 ])
 def test_clusters_a_lone_syllable_cannot_start_with(words, expected):
     assert say(words) == expected
+
+
+@pytest.mark.parametrize("words, expected", [
+    ("cae-li", ["ce", "li"]),                           # Polish c is already "ts"
+    ("ec-ce", ["ek", "ce"]),
+    ("pec-cá-vi-mus", ["pek", "ka", "wi", "mus"]),
+    ("san-ctus", ["sank", "tus"]),
+    ("ju-stum", ["ju", "stum"]),
+    ("Ie-sus", ["je", "sus"]),
+    ("qui-a", ["kwi", "a"]),
+    ("san-guis", ["san", "gwis"]),
+    ("di-xit", ["di", "ksjit"]),
+    ("grá-ti-a", ["gra", "tsji", "a"]),
+    ("hó-sti-a", ["ho", "sti", "a"]),
+    ("cí-vi-tas", ["tsji", "wi", "tas"]),               # not the soft Polish "ci"
+    ("Si-on", ["sji", "on"]),
+    ("mi-hi", ["mi", "hi"]),                            # h is sounded
+    ("lau-da-vé-runt", ["lał", "da", "we", "runt"]),
+    ("Je-rú-sa-lem", ["je", "ru", "sà", "lem"]),
+])
+def test_polish_style(words, expected):
+    assert say(words, "polish") == expected
+
+
+def test_unknown_style_is_refused():
+    with pytest.raises(ValueError, match="roman"):
+        say("a-men", "klingon")

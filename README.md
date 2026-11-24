@@ -55,8 +55,9 @@ calls, and what is cached where.
 
 ## Try it
 
-Needs macOS (the guide uses the built-in `say` voices, with the Italian voice
-"Alice" installed) and [uv](https://docs.astral.sh/uv/).
+Needs macOS (the guide uses the built-in `say` voices: the Italian voice
+"Alice", or the Polish voice "Zosia" for `--latin polish`) and
+[uv](https://docs.astral.sh/uv/).
 
 ```bash
 uv sync
@@ -74,6 +75,11 @@ uv run neuma guide chants/rorate-caeli/refrain.gabc
 
 It writes `out/refrain/guide.wav`. Useful options: `--transpose` (semitones),
 `--unit` (seconds per note), `--glide` (milliseconds between notes).
+
+Church Latin is pronounced differently from country to country. `--latin roman`
+(the default) is the Italianate pronunciation, "che-li" and "et-che";
+`--latin polish` is the central European one, "tse-li" and "ek-tse". Output
+then goes to `out/refrain-polish/`.
 
 Singing needs an ElevenLabs API key in the `ELEVENLABS_API_KEY` environment
 variable, with access to Speech to Speech and read access to Voices:
