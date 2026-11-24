@@ -45,9 +45,10 @@ def test_spellings_italian_lacks(words, expected):
 
 @pytest.mark.parametrize("words, expected", [
     ("grá-ti-a", ["gra", "zi", "a"]),
-    ("san-cti-fi-ca-ti-ó-nis", ["san", "cti", "fi", "ca", "zi", "o", "nis"]),
-    ("af-fli-cti-ó-nem", ["af", "fli", "ktsi", "o", "nem"]),
+    ("san-cti-fi-ca-ti-ó-nis", ["sanc", "ti", "fi", "ca", "zi", "o", "nis"]),
+    ("af-fli-cti-ó-nem", ["af", "flic", "zi", "o", "nem"]),
     ("hó-sti-a", ["ho", "sti", "a"]),          # not after s
+    ("hós-ti-a", ["hos", "ti", "a"]),          # however the syllables are divided
     ("pa-ti a-mo", ["pa", "ti", "a", "mo"]),   # not across a word boundary
     ("ti-mé-re", ["ti", "me", "re"]),          # not before a consonant
 ])
@@ -74,3 +75,16 @@ def test_every_syllable_of_the_chant_has_a_spelling_with_a_vowel():
 def test_syllable_without_letters_is_an_error():
     with pytest.raises(ValueError):
         spoken(["..."], [True])
+
+
+@pytest.mark.parametrize("words, expected", [
+    ("fa-cta est", ["fac", "ta", "est"]),
+    ("san-ctus", ["sanc", "tus"]),
+    ("scri-ptor", ["scrip", "tor"]),
+    ("i-pse", ["ip", "se"]),
+    ("psal-mus", ["psal", "mus"]),             # nothing to lean on at the start of a word
+    ("et ptó-le", ["et", "pto", "le"]),
+    ("abs-cón-di-sti", ["aps", "con", "di", "sti"]),
+])
+def test_clusters_a_lone_syllable_cannot_start_with(words, expected):
+    assert say(words) == expected
