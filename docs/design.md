@@ -10,23 +10,36 @@ what comes back. Only one step talks to ElevenLabs.
 
 ```mermaid
 flowchart TD
-    gabc[/"GABC file<br/>chants/*.gabc"/] --> parse["1. Parse<br/>gabc.py"]
-    parse -->|Score| rhythm["2. Rhythm rule<br/>rhythm.py"]
-    rhythm -->|"note events<br/>(syllable, pitch, units)"| guide["3. Guide track<br/>macOS say + WORLD"]
-    guide -->|"guide.wav"| vc["4. Voice Changer<br/>elevenlabs.py"]
-    vc <-->|"HTTPS"| api(("ElevenLabs API"))
-    vc -->|"take.mp3"| retune["5. Retune<br/>WORLD or PSOLA"]
-    guide -->|"melody line"| retune
-    retune -->|"in-tune take.wav"| mix["6. Choir mix<br/>planned, M4"]
-    mix --> out[/"final audio"/]
+    subgraph before["On your machine"]
+        gabc[/"GABC file"/] --> parse["1. Parse"]
+        parse -->|"syllables of notes"| rhythm["2. Rhythm rule"]
+        rhythm -->|"note events"| guide["3. Guide track"]
+    end
+    subgraph el["ElevenLabs servers"]
+        vc["4. Voice Changer"]
+    end
+    subgraph after["On your machine"]
+        retune["5. Retune"] -->|"in-tune take.wav"| mix["6. Choir mix (planned)"]
+        mix --> out[/"final audio"/]
+    end
+    guide ==>|"upload guide.wav"| vc
+    vc ==>|"download take.mp3"| retune
+    guide -.->|"melody line, kept locally"| retune
 ```
+
+The path is a single line: steps 1-3 run locally, step 4 is the round trip to
+ElevenLabs (thick arrows), steps 5-6 run locally again. ElevenLabs is not a
+side branch; every take passes through it. The dotted arrow is the one thing
+that skips it: the intended melody, which step 3 computes and step 5 needs in
+order to know what "in tune" means. `elevenlabs.py` is the client for step 4:
+it checks the cache and the credit cap, uploads the guide, and saves the reply.
 
 | # | Step | Code | Input | Output | Status |
 |---|---|---|---|---|---|
 | 1 | Parse | `src/neuma/gabc.py` | GABC text | `Score`: syllables of notes at notated pitch, and bar lines | done, tested |
 | 2 | Rhythm rule | `src/neuma/rhythm.py` | `Score`, transposition | list of `NoteEvent(syllable, midi, units)`, rests included | done, tested |
-| 3 | Guide track | `experiments/m0_refrain.py` | syllables, pitches, lengths | `guide.wav`, the melody line, note timings | experiment; refrain is hand-coded, not yet fed by steps 1-2 (M2) |
-| 4 | Voice Changer | `src/neuma/elevenlabs.py` | `guide.wav`, voice id | `take.mp3` in the chosen voice | done, tested |
+| 3 | Guide track | `src/neuma/guide.py`, `latin.py` | note events | `guide.wav`, the melody line, note timings | done, tested; `neuma guide <file.gabc>` |
+| 4 | Voice Changer | `src/neuma/elevenlabs.py` | `guide.wav`, voice id | `take.mp3` in the chosen voice | client done, tested; so far only called from `experiments/` (M3) |
 | 5 | Retune | `experiments/m0_retune.py` | `take.mp3`, melody line | `take.wav`, in tune | experiment (M3 makes it a module) |
 | 6 | Choir mix | - | several retuned takes | one mixed file with reverb | planned (M4) |
 
@@ -43,11 +56,13 @@ rests. The table is in the module docstring.
 **3. Guide track.** Voice Changer takes audio only, no text, so the guide must
 carry the words.
 
-- Each syllable is spoken by a macOS Italian voice (`say`), which is free.
-  Church Latin is pronounced like Italian.
+- Each syllable is respelled where Latin and Italian spelling differ (`cae` to
+  `ce`, `ju` to `iu`) and spoken by a macOS Italian voice (`say`), which is
+  free. Church Latin is pronounced like Italian.
 - The WORLD vocoder splits each syllable into onset consonants, vowel and tail,
   stretches only the vowel to the note lengths, and replaces the spoken pitch
-  with the melody.
+  with the melody. A note starts on its vowel; consonants take their time from
+  the end of the previous note and are shortened if they would crowd it.
 - The melody line is the stepped note pitches passed through a second-order
   low-pass filter, which joins notes with a short glide (80 ms by default).
 
@@ -92,9 +107,9 @@ Nothing below is committed; `.cache/`, `out/` and `.env` are git-ignored.
 | `.cache/say/<hash>.wav` | one spoken syllable per file | WAV, 22.05 kHz, 16-bit mono |
 | `.cache/elevenlabs/<hash>.mp3` | a Voice Changer response | MP3, 44.1 kHz, 128 kbps |
 | `.cache/elevenlabs/<hash>.json` | the request that produced it, estimated credits, timestamp | JSON |
-| `out/m0/guide.wav` | guide track | WAV, 22.05 kHz, 16-bit mono |
-| `out/m0/pitch.npy` | intended melody in Hz, one value per 5 ms | NumPy array |
-| `out/m0/notes.json` | start, end, pitch and syllable of every note | JSON |
+| `out/<chant>/guide.wav` | guide track | WAV, 22.05 kHz, 16-bit mono |
+| `out/<chant>/pitch.npy` | intended melody in Hz, one value per 5 ms | NumPy array |
+| `out/<chant>/notes.json` | start, end, pitch and syllable of every note | JSON |
 | `out/m0/sung-*.mp3` | copy of a Voice Changer take | MP3 |
 | `out/m0/sung-*-<variant>.wav` | retuned take | WAV, 44.1 kHz, 16-bit mono |
 
