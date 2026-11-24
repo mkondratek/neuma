@@ -12,6 +12,9 @@ dependencies = [
     "soundfile>=0.12",
 ]
 
+[project.scripts]
+neuma = "neuma.__main__:main"
+
 [dependency-groups]
 dev = ["pytest>=8"]
 
