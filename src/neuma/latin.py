@@ -25,7 +25,9 @@ import unicodedata
 
 VOWELS = "aeiouy"
 SPLIT_ONSETS = ("ct", "pt", "ps")  # said as two syllables when they start one
-ROMAN_MISREAD = {"us": "ùs"}  # read as the English word "us" when it stands alone (me-us, De-us)
+# "us" alone (me-us, De-us) is read as the English word, and "ùs" as the
+# letters U, S. The Italian h is silent, and with it the word is unknown.
+ROMAN_MISREAD = {"us": "hus"}
 POLISH_MISREAD = {"sa": "sà"}  # read as the abbreviation S.A. when it stands alone
 VOICES = {"roman": "Alice", "polish": "Zosia"}  # macOS voices: Italian, Polish
 
