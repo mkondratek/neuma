@@ -13,15 +13,16 @@ church are much easier to listen to.
 
 ## Listen
 
+**[Play the samples in the browser](https://mkondratek.github.io/neuma/)**, or download them here.
 Voices by [elevenlabs.io](https://elevenlabs.io).
 
 | Sample | What it is |
 |---|---|
-| [rorate-caeli-choir.mp3](samples/rorate-caeli-choir.mp3) | Refrain, verse 1, refrain. Four voices, church reverb, Roman (Italianate) Latin. 64 s |
-| [rorate-caeli-choir-polish.mp3](samples/rorate-caeli-choir-polish.mp3) | The same in Polish-style Latin, for comparison |
-| [refrain-one-voice.mp3](samples/refrain-one-voice.mp3) | One voice, retuned, no reverb: what the choir is made of |
-| [refrain-one-voice-before-retuning.mp3](samples/refrain-one-voice-before-retuning.mp3) | The same take as ElevenLabs returned it: human, and out of tune |
-| [refrain-guide.mp3](samples/refrain-guide.mp3) | The local guide track that ElevenLabs was given |
+| [rorate-caeli-choir.mp3](docs/samples/rorate-caeli-choir.mp3) | Refrain, verse 1, refrain. Four voices, church reverb, Roman (Italianate) Latin. 64 s |
+| [rorate-caeli-choir-polish.mp3](docs/samples/rorate-caeli-choir-polish.mp3) | The same in Polish-style Latin, for comparison |
+| [refrain-one-voice.mp3](docs/samples/refrain-one-voice.mp3) | One voice, retuned, no reverb: what the choir is made of |
+| [refrain-one-voice-before-retuning.mp3](docs/samples/refrain-one-voice-before-retuning.mp3) | The same take as ElevenLabs returned it: human, and out of tune |
+| [refrain-guide.mp3](docs/samples/refrain-guide.mp3) | The local guide track that ElevenLabs was given |
 
 ## How it works
 

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>neuma: Gregorian chant, sung by AI voices</title>
+<meta name="description" content="Rorate caeli desuper, read from GABC notation and sung by ElevenLabs voices as a small choir.">
+<style>
+  :root {
+    --bg: #f6f1e7; --ink: #2b2620; --soft: #6f6558; --line: #d9cfbd; --accent: #8c2f1b; --card: #fbf8f1;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1b1815; --ink: #ece5d8; --soft: #a59a88; --line: #3a342c; --accent: #e08a6d; --card: #231f1b; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 18px/1.6 "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  }
+  main { max-width: 42rem; margin: 0 auto; padding: 3.5rem 1rem 4rem; }
+  h1 { font-size: 2.6rem; line-height: 1.1; margin: 0 0 .4rem; font-weight: 500; letter-spacing: .01em; }
+  h1::first-letter { color: var(--accent); }
+  .lede { font-size: 1.2rem; color: var(--soft); margin: 0 0 2.5rem; font-style: italic; }
+  h2 {
+    font: 600 .8rem/1.2 system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--soft); margin: 3rem 0 1rem; padding-bottom: .5rem; border-bottom: 1px solid var(--line);
+  }
+  figure { margin: 0 0 1.25rem; padding: 1.1rem 1.2rem 1.2rem; background: var(--card); border: 1px solid var(--line); border-radius: 6px; }
+  figure.main { border-left: 3px solid var(--accent); }
+  figcaption strong { display: block; font-weight: 600; }
+  figcaption span { display: block; color: var(--soft); font-size: .95rem; margin-bottom: .8rem; }
+  audio { width: 100%; display: block; }
+  ol { padding-left: 1.3rem; }
+  li { margin-bottom: .4rem; }
+  a { color: var(--accent); }
+  footer { margin-top: 3rem; padding-top: 1.2rem; border-top: 1px solid var(--line); color: var(--soft); font-size: .92rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>neuma</h1>
+  <p class="lede">Gregorian chant, read from GABC notation and sung by AI voices.</p>
+
+  <p>The Advent hymn <em>Rorate caeli desuper</em>: refrain, first verse, refrain.
+  Four ElevenLabs voices, a few cents and milliseconds apart, in a generated church reverb.</p>
+
+  <figure class="main">
+    <figcaption><strong>The choir</strong><span>Roman (Italianate) Latin, 64 seconds</span></figcaption>
+    <audio controls preload="metadata" src="samples/rorate-caeli-choir.mp3"></audio>
+  </figure>
+
+  <figure>
+    <figcaption><strong>The same, in Polish-style Latin</strong><span>"tse-li" and "ek-tse" where the Roman style has "che-li" and "et-che"</span></figcaption>
+    <audio controls preload="none" src="samples/rorate-caeli-choir-polish.mp3"></audio>
+  </figure>
+
+  <h2>How one voice is made</h2>
+  <p>ElevenLabs has no endpoint that takes a melody, so the refrain goes through three stages. Listen in order.</p>
+
+  <figure>
+    <figcaption><strong>1. The guide</strong><span>Built locally: a system voice speaks each syllable, a vocoder stretches it onto the notes</span></figcaption>
+    <audio controls preload="none" src="samples/refrain-guide.mp3"></audio>
+  </figure>
+
+  <figure>
+    <figcaption><strong>2. As ElevenLabs returns it</strong><span>Voice Changer makes it human and keeps the timing, but not the pitch</span></figcaption>
+    <audio controls preload="none" src="samples/refrain-one-voice-before-retuning.mp3"></audio>
+  </figure>
+
+  <figure>
+    <figcaption><strong>3. Retuned</strong><span>The melody is put back, gently. In tune, and somewhat robotic; the choir hides most of that</span></figcaption>
+    <audio controls preload="none" src="samples/refrain-one-voice.mp3"></audio>
+  </figure>
+
+  <footer>
+    Voices by <a href="https://elevenlabs.io">elevenlabs.io</a>. Chant transcription from
+    <a href="https://gregobase.selapa.net/">GregoBase</a> (CC0).
+    Code, and notes on what worked and what did not:
+    <a href="https://github.com/mkondratek/neuma">github.com/mkondratek/neuma</a>.
+  </footer>
+</main>
+</body>
+</html>

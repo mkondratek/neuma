@@ -123,7 +123,7 @@ Two guards sit in front of the network:
 
 ## Files on disk
 
-`.cache/`, `out/` and `.env` are git-ignored; only `samples/` is committed.
+`.cache/`, `out/` and `.env` are git-ignored; only `docs/samples/` is committed.
 With `--latin polish` the output directory is `out/<chant>-polish/`.
 
 | Path | What | Format |
@@ -137,7 +137,7 @@ With `--latin polish` the output directory is `out/<chant>-polish/`.
 | `out/<chant>/<voice>-raw.mp3` | copy of a Voice Changer take | MP3 |
 | `out/<chant>/<voice>.wav` | retuned take | WAV, 44.1 kHz, 16-bit mono |
 | `out/<chant>/choir.wav` | the mixed choir | WAV, 44.1 kHz, 16-bit stereo |
-| `samples/*.mp3` | the samples linked from the README; the only audio that is committed | MP3, stereo or mono |
+| `docs/samples/*.mp3` | the samples played by the project page (`docs/index.html`, served by GitHub Pages); the only audio that is committed | MP3, stereo or mono |
 
 The caches are keyed by content, so they are safe to delete: spoken syllables
 are regenerated for free, Voice Changer takes cost credits again.
