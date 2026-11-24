@@ -97,4 +97,9 @@ def _polish(syl: str, prev: str, nxt: str) -> str:
     syl = POLISH_MISREAD.get(syl, syl)
     if syl.endswith("bs"):
         syl = syl[:-2] + "ps"
+    # The voice lets an "i" that ends an utterance trail off into a dull hum,
+    # which is then stretched over the note ("cae-lum" for "cae-li"). A j is
+    # the same sound and keeps the i bright to its end.
+    if syl.endswith("i"):
+        syl += "j"
     return syl

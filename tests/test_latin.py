@@ -91,20 +91,20 @@ def test_clusters_a_lone_syllable_cannot_start_with(words, expected):
 
 
 @pytest.mark.parametrize("words, expected", [
-    ("cae-li", ["ce", "li"]),                           # Polish c is already "ts"
+    ("cae-li", ["ce", "lij"]),                          # Polish c is already "ts"; j keeps a final i bright
     ("ec-ce", ["ek", "ce"]),
-    ("pec-cá-vi-mus", ["pek", "ka", "wi", "mus"]),
+    ("pec-cá-vi-mus", ["pek", "ka", "wij", "mus"]),
     ("san-ctus", ["sank", "tus"]),
     ("ju-stum", ["ju", "stum"]),
     ("Ie-sus", ["je", "sus"]),
-    ("qui-a", ["kwi", "a"]),
+    ("qui-a", ["kwij", "a"]),
     ("san-guis", ["san", "gwis"]),
-    ("di-xit", ["di", "ksjit"]),
-    ("grá-ti-a", ["gra", "tsji", "a"]),
-    ("hó-sti-a", ["ho", "sti", "a"]),
-    ("cí-vi-tas", ["tsji", "wi", "tas"]),               # not the soft Polish "ci"
-    ("Si-on", ["sji", "on"]),
-    ("mi-hi", ["mi", "hi"]),                            # h is sounded
+    ("di-xit", ["dij", "ksjit"]),
+    ("grá-ti-a", ["gra", "tsjij", "a"]),
+    ("hó-sti-a", ["ho", "stij", "a"]),
+    ("cí-vi-tas", ["tsjij", "wij", "tas"]),               # not the soft Polish "ci"
+    ("Si-on", ["sjij", "on"]),
+    ("mi-hi", ["mij", "hij"]),                            # h is sounded
     ("lau-da-vé-runt", ["lał", "da", "we", "runt"]),
     ("Je-rú-sa-lem", ["je", "ru", "sà", "lem"]),
 ])
