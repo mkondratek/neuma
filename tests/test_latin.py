@@ -69,7 +69,7 @@ def test_every_syllable_of_the_chant_has_a_spelling_with_a_vowel():
     for name in ("refrain", "verse-1", "verse-2", "verse-3", "verse-4"):
         syllables = parse((CHANT / f"{name}.gabc").read_text()).syllables
         for s in spoken([s.text for s in syllables], [s.starts_word for s in syllables]):
-            assert s.isalpha() and s.islower() and set(s) & set("aeiou"), s
+            assert s.isalpha() and s.islower() and set(s) & set("aeiouù"), s
 
 
 def test_syllable_without_letters_is_an_error():
