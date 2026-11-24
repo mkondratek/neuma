@@ -38,6 +38,7 @@ class NoteEvent:
     midi: int | None
     units: float
     starts_syllable: bool = False
+    starts_word: bool = False
 
     @property
     def is_rest(self) -> bool:
@@ -55,7 +56,8 @@ def note_events(score: Score, transpose: int = 0) -> list[NoteEvent]:
             units = DOTTED if note.dotted else HELD if note.episema else 1.0
             if note.quilisma and events and not events[-1].is_rest:
                 events[-1] = replace(events[-1], units=max(events[-1].units, HELD))
-            events.append(NoteEvent(item.text, note.midi + transpose, units, k == 0))
+            first = k == 0
+            events.append(NoteEvent(item.text, note.midi + transpose, units, first, first and item.starts_word))
     return events
 
 
