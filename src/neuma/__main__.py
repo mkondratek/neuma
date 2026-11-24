@@ -1,6 +1,7 @@
 """Command line.
 
     neuma guide chants/rorate-caeli/refrain.gabc          local and free
+    neuma check chants/rorate-caeli/refrain.gabc          local and free
     neuma voices                                          quota and voices
     neuma sing chants/rorate-caeli/refrain.gabc --voice George --max-credits 200
     neuma choir chants/rorate-caeli/refrain.gabc --voices George,Brian,Bill,Daniel --max-credits 600
@@ -16,8 +17,10 @@ from pathlib import Path
 
 import soundfile as sf
 
-from neuma import choir, guide, latin, pipeline
+from neuma import check, choir, guide, latin, pipeline
 from neuma.elevenlabs import BudgetExceeded, ElevenLabs, voice_changer_credits
+from neuma.gabc import parse
+from neuma.rhythm import note_events
 
 
 def _guide_options(args) -> dict:
@@ -40,6 +43,21 @@ def cmd_guide(args) -> None:
     result = pipeline.render_guide(Path(args.gabc), out, **_guide_options(args))
     print(f"{out / 'guide.wav'}: {len(result.notes)} notes, {result.duration_s:.1f}s, "
           f"~{voice_changer_credits(result.duration_s)} credits per Voice Changer call")
+
+
+def cmd_check(args) -> None:
+    options = _guide_options(args)
+    events = note_events(parse(Path(args.gabc).read_text()), transpose=options.pop("transpose"))
+    result, findings = check.check(events, **options)
+    if not findings:
+        print("nothing found; that is not the same as sounding right")
+        return
+    for finding in findings:
+        print(finding)
+    out = _out_dir(args)
+    out.mkdir(parents=True, exist_ok=True)
+    sf.write(out / "check.wav", check.excerpts(result, findings), guide.SAMPLE_RATE, subtype="PCM_16")
+    print(f"{out / 'check.wav'}: the flagged places, in this order, to listen to")
 
 
 def cmd_voices(args) -> None:
@@ -131,6 +149,10 @@ def main() -> None:
     g = sub.add_parser("guide", help="render the guide track for a GABC file (free, local)")
     chant_options(g)
     g.set_defaults(fn=cmd_guide)
+
+    k = sub.add_parser("check", help="look for mispronounced syllables in the guide (free, local)")
+    chant_options(k)
+    k.set_defaults(fn=cmd_check)
 
     v = sub.add_parser("voices", help="show quota and available voices (free)")
     v.set_defaults(fn=cmd_voices)

@@ -133,21 +133,24 @@ def _analyse(x: np.ndarray, text: str) -> _Spoken:
 
 
 def _vowel(energy: np.ndarray, voiced: np.ndarray) -> tuple[int, int]:
-    """The frame range of the vowel: the loud voiced stretch around the peak.
+    """The frame range of the vowel: the first loud voiced stretch long enough to be one.
 
-    A rolled "r" (and some voiced stops) opens with a short burst of voice
-    that can be louder than the vowel after it. Stretching that burst over
-    the note sings "y-ro" for "ro", so a stretch too short to be a vowel
-    gives way to the longest one.
+    Loudness alone does not find it. A rolled "r" (and some voiced stops)
+    opens with a short burst of voice louder than the vowel, and stretching
+    that sings "y-ro" for "ro"; a nasal after the vowel can be louder too,
+    and stretching that sings "sannnk" for "sanc". So short stretches are
+    passed over, and of the long ones the vowel is the first.
     """
-    peak = int(np.argmax(np.where(voiced, energy, 0)))
-    loud = voiced & (energy > 0.25 * energy[peak])
+    runs = _loud_runs(energy, voiced)
+    long_enough = [run for run in runs if run[1] - run[0] >= SHORTEST_VOWEL_FRAMES]
+    return long_enough[0] if long_enough else max(runs, key=lambda run: run[1] - run[0])
+
+
+def _loud_runs(energy: np.ndarray, voiced: np.ndarray) -> list[tuple[int, int]]:
+    """Frame ranges that are voiced and within 6 dB of the loudest voiced frame."""
+    loud = voiced & (energy > 0.25 * np.where(voiced, energy, 0).max())
     edges = np.flatnonzero(np.diff(np.concatenate([[0], loud.astype(int), [0]])))
-    runs = [(int(a), int(b)) for a, b in zip(edges[::2], edges[1::2])]
-    a, b = next(run for run in runs if run[0] <= peak < run[1])
-    if b - a < SHORTEST_VOWEL_FRAMES:
-        a, b = max(runs, key=lambda run: run[1] - run[0])
-    return a, b
+    return [(int(a), int(b)) for a, b in zip(edges[::2], edges[1::2])]
 
 
 # --- melody line ------------------------------------------------------------

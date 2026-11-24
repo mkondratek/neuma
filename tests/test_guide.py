@@ -145,6 +145,12 @@ def test_short_burst_before_a_rolled_r_is_not_the_vowel():
     assert _vowel(energy, np.ones(50, bool)) == (15, 40)
 
 
+def test_louder_nasal_after_the_vowel_is_not_the_vowel():
+    # Polish "sank": the "n" is louder than the "a" before it
+    energy = _energy((0.01, 5), (0.6, 27), (0.1, 2), (1.0, 30))
+    assert _vowel(energy, np.ones(64, bool)) == (5, 32)
+
+
 def test_unvoiced_frames_are_never_the_vowel():
     energy = _energy((2.0, 10), (1.0, 30))
     voiced = np.concatenate([np.zeros(10, bool), np.ones(30, bool)])
