@@ -3,7 +3,7 @@ import pytest
 import pyworld as pw
 
 from neuma.gabc import parse
-from neuma.guide import FRAME_MS, FRAME_S, SAMPLE_RATE, _vowel, glide, midi_to_hz, render
+from neuma.guide import FRAME_MS, FRAME_S, P_CLOSURE_FRAMES, SAMPLE_RATE, _analyse, _vowel, glide, midi_to_hz, render
 from neuma.rhythm import note_events
 
 
@@ -149,3 +149,12 @@ def test_unvoiced_frames_are_never_the_vowel():
     energy = _energy((2.0, 10), (1.0, 30))
     voiced = np.concatenate([np.zeros(10, bool), np.ones(30, bool)])
     assert _vowel(energy, voiced) == (10, 40)
+
+
+def test_p_gets_a_silence_before_its_burst():
+    spoken = fake_speaker("la")
+    plain, with_p = _analyse(spoken, "la"), _analyse(spoken, "pa")
+    assert with_p.onset == plain.onset + P_CLOSURE_FRAMES
+    assert not with_p.voiced[:P_CLOSURE_FRAMES].any()
+    closure = with_p.sp[:P_CLOSURE_FRAMES].sum(axis=1).max()
+    assert closure < 1e-3 * with_p.sp[slice(*with_p.vowel)].sum(axis=1).mean()

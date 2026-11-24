@@ -29,6 +29,7 @@ FRAME_MS = 5.0
 FRAME_S = FRAME_MS / 1000
 MIN_VOWEL_FRAMES = 12  # 60 ms
 SHORTEST_VOWEL_FRAMES = 16  # 80 ms; a louder spoken stretch shorter than this is not the vowel
+P_CLOSURE_FRAMES = 12  # 60 ms of silence before the burst of a p
 MIN_VOWEL_SHARE = 0.5  # of a syllable's time; consonants are shortened to make room
 
 Speaker = Callable[[str], np.ndarray]  # spelling -> mono float64 at SAMPLE_RATE
@@ -118,6 +119,16 @@ def _analyse(x: np.ndarray, text: str) -> _Spoken:
 
     a, b = _vowel(energy, voiced)
     sp = sp / energy[a:b].mean()  # equal loudness across syllables
+
+    # A p is heard mostly as the silence before it: its burst is the weakest
+    # of the stops, and the trimming above removed the closure. Without it
+    # "nu-bes plu-ant" runs together as "nubes luant".
+    if text.startswith("p"):
+        quiet = np.repeat(sp[:1] * 1e-4, P_CLOSURE_FRAMES, axis=0)
+        sp = np.concatenate([quiet, sp])
+        ap = np.concatenate([np.ones((P_CLOSURE_FRAMES, ap.shape[1])), ap])
+        voiced = np.concatenate([np.zeros(P_CLOSURE_FRAMES, bool), voiced])
+        a, b = a + P_CLOSURE_FRAMES, b + P_CLOSURE_FRAMES
     return _Spoken(sp, ap, voiced, (a, b))
 
 
