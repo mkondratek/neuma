@@ -9,7 +9,11 @@ This script tries two remedies on a take that is already on disk (no credits):
 * PSOLA: shift pitch on the original waveform (Praat's overlap-add) instead of
   rebuilding the sound in a vocoder.
 
-    uv run experiments/m0_retune.py out/m0/<take>.mp3
+    uv run --group experiments experiments/m0_retune.py out/m0/<take>.mp3
+
+Outcome: by ear the gentle correction mattered and the method did not, so
+``neuma.retune`` uses the gentle correction through WORLD and Praat stays an
+experiment-only dependency.
 
 Needs out/m0/pitch.npy and notes.json from the m0_refrain.py run that made the take.
 """
