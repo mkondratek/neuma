@@ -87,3 +87,12 @@ def test_join_overlaps_each_piece_with_the_tail_before_it():
 def test_join_never_starts_before_the_beginning():
     short = np.stack([tone(seconds=0.1)] * 2, axis=1)
     assert len(choir.join([short, short], SR, overlap_s=1.0)) == len(short)
+
+
+def test_warmth_fills_the_low_mids_and_softens_the_top():
+    def level(x):
+        return 20 * np.log10(np.sqrt(np.mean(x**2)))
+
+    for hz, change in ((250, 3.0), (7000, -4.0 / (1 + 0.5**4)), (1000, 0.4)):
+        assert abs(level(choir.warm(tone(hz), SR, 3)) - level(tone(hz)) - change) < 0.3
+

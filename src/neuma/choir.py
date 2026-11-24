@@ -87,10 +87,20 @@ def reverb(stereo: np.ndarray, sample_rate: int, *, decay_s: float = 3.5, wet: f
     return out
 
 
+def warm(audio: np.ndarray, sample_rate: int, db: float) -> np.ndarray:
+    """Tilt a voice towards its chest: ``db`` more around 250 Hz, and a third
+    more than that taken off above 3.5 kHz, where a re-voiced take is hard."""
+    freqs = np.maximum(np.fft.rfftfreq(len(audio), 1 / sample_rate), 1.0)
+    body = db * np.exp(-0.5 * np.log2(freqs / 250) ** 2)
+    top = -db * 4 / 3 / (1 + (3500 / freqs) ** 4)
+    return np.fft.irfft(np.fft.rfft(audio) * 10 ** ((body + top) / 20), len(audio))
+
+
 def mix(
     voices: list[np.ndarray],
     sample_rate: int,
     *,
+    warmth_db: float = 3,
     spread_ms: float = 25,
     width: float = 0.6,
     decay_s: float = 3.5,
@@ -99,6 +109,7 @@ def mix(
 ) -> np.ndarray:
     """Mix mono takes of the same length-ish into a stereo choir, shape (n, 2).
 
+    ``warmth_db`` darkens and fills each voice (see ``warm``; 0 for none),
     ``spread_ms`` is how far apart the voices may be in time, ``width`` how
     much of the stereo field they fill (0 mono, 1 hard left to hard right),
     ``decay_s`` and ``wet`` the length and amount of reverb (``wet=0`` for none).
@@ -113,6 +124,8 @@ def mix(
     stereo = np.zeros((n, 2))
     for i, voice in enumerate(voices):
         voice = np.pad(voice, (0, n - len(voice)))
+        if warmth_db:
+            voice = warm(voice, sample_rate, warmth_db)
         voice = voice / np.sqrt(np.mean(voice**2))  # equal loudness
         voice = loosen(voice, sample_rate, offset_ms=offsets[i], wander_ms=spread_ms / 4, seed=seed + 1 + i)
         angle = (positions[i] + 1) * np.pi / 4  # constant-power pan

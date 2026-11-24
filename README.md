@@ -152,7 +152,7 @@ response is cached on disk, so re-runs cost nothing, and without
 `--max-credits` nothing is ever sent.
 
 A choir is the same with several voices. Takes already sung are reused, and
-the mix options (`--detune`, `--spread`, `--reverb`, `--wet`, `--seed`) can be
+the mix options (`--detune`, `--spread`, `--reverb`, `--wet`, `--warmth`, `--seed`) can be
 changed without spending anything:
 
 ```bash

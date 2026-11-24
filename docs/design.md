@@ -110,7 +110,9 @@ sample-aligned and, after retuning, on exactly the same pitch: stacked as they
 are, they sound like one voice with an effect on it. The mix pulls them apart
 again. Each voice is retuned a few cents off the others (up to 8), enters up
 to 25 ms late and drifts a few milliseconds around that, and stands at its own
-place in the stereo field. The sum goes through a reverb whose impulse
+place in the stereo field. Each is also made a little warmer: 3 dB more
+around 250 Hz and 4 dB less above 3.5 kHz, because the re-voiced takes
+sounded cold. The sum goes through a reverb whose impulse
 response is generated, not recorded: noise that decays over 3.5 seconds, with
 the high frequencies dying three times faster, as in a stone church.
 

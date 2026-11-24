@@ -110,7 +110,7 @@ def cmd_choir(args) -> None:
     try:
         result = pipeline.choir(
             Path(args.gabc), voices, client, _out_dir(args),
-            detune_cents=args.detune, spread_ms=args.spread, decay_s=args.reverb, wet=args.wet,
+            detune_cents=args.detune, spread_ms=args.spread, decay_s=args.reverb, wet=args.wet, warmth_db=args.warmth,
             seed=args.seed, level_db=args.level, **_guide_options(args),
         )
     except BudgetExceeded as e:
@@ -180,6 +180,7 @@ def main() -> None:
     c.add_argument("--spread", type=float, default=25, help="voices enter up to this many ms apart")
     c.add_argument("--reverb", type=float, default=3.5, help="reverb decay, seconds")
     c.add_argument("--wet", type=float, default=0.3, help="share of reverb in the mix, 0 to 1")
+    c.add_argument("--warmth", type=float, default=3, help="fuller low-mids and softer top for each voice, dB (0 for none)")
     c.add_argument("--level", type=float, default=9,
                    help="raise notes that came back too quiet by up to this many dB; 0 to leave them")
     c.add_argument("--seed", type=int, default=0, help="changes who stands where and who is early")

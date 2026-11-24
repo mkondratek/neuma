@@ -115,6 +115,7 @@ def choir(
     spread_ms: float = 25,
     decay_s: float = 3.5,
     wet: float = 0.3,
+    warmth_db: float = 3,
     seed: int = 0,
     level_db: float = 9,
     **guide_options,
@@ -135,7 +136,8 @@ def choir(
     for take in takes:
         samples, sample_rate = sf.read(take.sung, dtype="float64")
         audio.append(samples)
-    mixed = choir_mod.mix(audio, sample_rate, spread_ms=spread_ms, decay_s=decay_s, wet=wet, seed=seed)
+    mixed = choir_mod.mix(audio, sample_rate, spread_ms=spread_ms, decay_s=decay_s, wet=wet,
+                           warmth_db=warmth_db, seed=seed)
     path = out_dir / "choir.wav"
     sf.write(path, mixed, sample_rate, subtype="PCM_16")
     return Choir(tuple(takes), path)
