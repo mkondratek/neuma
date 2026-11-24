@@ -20,7 +20,7 @@ from neuma.rhythm import NoteEvent
 
 FRAME_MS = guide_mod.FRAME_MS
 SONORANTS = "lmnrjwł"  # consonants that are loud and voiced like a vowel
-VOWELS = "aeiouyà"
+VOWELS = "aeiouyàù"
 # A rolled r and the Polish voice's b, d and g begin with a stretch of voice
 # as loud as the vowel. It measures like a fault and, checked by ear, is not one.
 VOICED_ONSETS = "rbdg"

@@ -115,3 +115,8 @@ def test_polish_style(words, expected):
 def test_unknown_style_is_refused():
     with pytest.raises(ValueError, match="roman"):
         say("a-men", "klingon")
+
+
+def test_a_lone_us_is_not_the_english_word():
+    assert say("me-us De-us") == ["me", "ùs", "de", "ùs"]
+    assert say("Dó-mi-nus") == ["do", "mi", "nus"]

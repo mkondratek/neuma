@@ -25,6 +25,7 @@ import unicodedata
 
 VOWELS = "aeiouy"
 SPLIT_ONSETS = ("ct", "pt", "ps")  # said as two syllables when they start one
+ROMAN_MISREAD = {"us": "ùs"}  # read as the English word "us" when it stands alone (me-us, De-us)
 POLISH_MISREAD = {"sa": "sà"}  # read as the abbreviation S.A. when it stands alone
 VOICES = {"roman": "Alice", "polish": "Zosia"}  # macOS voices: Italian, Polish
 
@@ -78,7 +79,7 @@ def _roman(syl: str, prev: str, nxt: str) -> str:
     # mi-hi and ni-hil keep a hard "k"; every other h is silent, as in Italian.
     if syl.startswith("hi") and prev in ("mi", "ni"):
         syl = "k" + syl[1:]
-    return syl
+    return ROMAN_MISREAD.get(syl, syl)
 
 
 def _polish(syl: str, prev: str, nxt: str) -> str:
