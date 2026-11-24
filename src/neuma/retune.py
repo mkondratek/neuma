@@ -1,4 +1,5 @@
-"""Put a sung take back on the melody, and measure how far off it is.
+"""Put a sung take back on the melody and its notes back at their loudness,
+and measure how far off it is.
 
 Voice Changer keeps the timing of the guide but not its pitch, so the melody
 has to be restored afterwards. The correction is deliberately gentle: only the
@@ -73,6 +74,46 @@ def retune(
     new = np.zeros_like(f0)
     new[voiced] = f0[voiced] * 2 ** _correction(t[voiced], f0[voiced], wanted, smooth_ms)
     out = pw.synthesize(new, sp, ap, sample_rate, FRAME_MS)
+    return out * 0.7 / np.abs(out).max()
+
+
+def _note_levels(audio: np.ndarray, sample_rate: int, notes) -> np.ndarray:
+    """Level in dB of the middle 60% of each note, against the median note."""
+    levels = []
+    for note in notes:
+        mid, half = (note.start_s + note.end_s) / 2, (note.end_s - note.start_s) * 0.3
+        part = audio[int((mid - half) * sample_rate): int((mid + half) * sample_rate)]
+        levels.append(10 * np.log10(np.mean(part**2) + 1e-12) if len(part) else -120.0)
+    levels = np.array(levels)
+    return levels - np.median(levels)
+
+
+def level(
+    audio: np.ndarray,
+    sample_rate: int,
+    notes,
+    guide: np.ndarray,
+    guide_rate: int,
+    *,
+    max_boost_db: float = 9,
+    max_cut_db: float = 6,
+) -> np.ndarray:
+    """Bring each note of a take to the loudness it has in the guide.
+
+    Voice Changer keeps the words and the timing but swallows some syllables,
+    returning them 10 dB or more below their neighbours. Timing survives, so
+    the guide says how loud each note was meant to be. The gain glides from
+    one note to the next, and is limited:
+    a note that came back as a whisper is noise, and stays quiet.
+    """
+    audio = _mono(audio)
+    gain_db = np.clip(_note_levels(_mono(guide), guide_rate, notes) - _note_levels(audio, sample_rate, notes),
+                      -max_cut_db, max_boost_db)
+    # Each note holds its gain over its middle 60%; the gain glides in between.
+    at = [m + side * (note.end_s - note.start_s) * 0.3
+          for note in notes for m in [(note.start_s + note.end_s) / 2] for side in (-1, 1)]
+    curve = np.interp(np.arange(len(audio)) / sample_rate, at, np.repeat(gain_db, 2))
+    out = audio * 10 ** (curve / 20)
     return out * 0.7 / np.abs(out).max()
 
 

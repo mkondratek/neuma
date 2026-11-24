@@ -5,7 +5,7 @@ import pytest
 import pyworld as pw
 
 from neuma.guide import midi_to_hz
-from neuma.retune import FRAME_MS, FRAME_S, retune, singer_key, tuning
+from neuma.retune import FRAME_MS, FRAME_S, _note_levels, level, retune, singer_key, tuning
 
 SR = 22050
 NOTE_S = 0.6
@@ -86,3 +86,38 @@ def test_retune_to_the_singers_key():
 def test_silence_has_no_pitch_to_retune():
     with pytest.raises(ValueError):
         retune(np.zeros(SR), SR, MELODY_HZ)
+
+
+# --- loudness ---------------------------------------------------------------
+
+
+def with_note_gains(audio: np.ndarray, gains_db) -> np.ndarray:
+    gains = np.repeat(10 ** (np.array(gains_db) / 20), len(audio) // len(gains_db))
+    return audio * gains
+
+
+def test_level_restores_a_swallowed_note():
+    guide = take([0, 0, 0, 0])
+    quiet = with_note_gains(guide, [0, -8, 0, 0])
+    assert _note_levels(quiet, SR, NOTES)[1] == pytest.approx(-8, abs=0.5)
+    assert np.abs(_note_levels(level(quiet, SR, NOTES, guide, SR), SR, NOTES)).max() < 1.0
+
+
+def test_level_follows_the_guide_not_a_flat_line():
+    guide = with_note_gains(take([0, 0, 0, 0]), [0, 0, -5, 0])
+    levelled = level(take([0, 0, 0, 0]), SR, NOTES, guide, SR)
+    assert _note_levels(levelled, SR, NOTES)[2] == pytest.approx(-5, abs=1.0)
+
+
+def test_level_does_not_raise_a_whisper_all_the_way():
+    guide = take([0, 0, 0, 0])
+    whisper = with_note_gains(guide, [0, -30, 0, 0])
+    levelled = level(whisper, SR, NOTES, guide, SR, max_boost_db=9)
+    assert _note_levels(levelled, SR, NOTES)[1] == pytest.approx(-21, abs=1.0)
+
+
+def test_level_works_across_sample_rates():
+    guide = take([0, 0, 0, 0])
+    quiet = with_note_gains(guide, [0, -8, 0, 0])
+    levelled = level(np.repeat(quiet, 2), SR * 2, NOTES, guide, SR)
+    assert np.abs(_note_levels(levelled, SR * 2, NOTES)).max() < 1.0

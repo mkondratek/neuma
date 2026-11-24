@@ -91,6 +91,7 @@ def cmd_sing(args) -> None:
         take = pipeline.sing(
             Path(args.gabc), voice_id, client, _out_dir(args),
             label=label, follow_singer_key=args.singer_key, smooth_ms=args.smooth,
+            level_db=args.level,
             **_guide_options(args),
         )
     except BudgetExceeded as e:
@@ -110,7 +111,7 @@ def cmd_choir(args) -> None:
         result = pipeline.choir(
             Path(args.gabc), voices, client, _out_dir(args),
             detune_cents=args.detune, spread_ms=args.spread, decay_s=args.reverb, wet=args.wet,
-            seed=args.seed, **_guide_options(args),
+            seed=args.seed, level_db=args.level, **_guide_options(args),
         )
     except BudgetExceeded as e:
         sys.exit(f"stopped after ~{client.spent} credits: {e}. Takes already sung are cached; "
@@ -164,6 +165,8 @@ def main() -> None:
                    help="credits this run may spend; the default 0 only allows cached takes")
     s.add_argument("--singer-key", action="store_true",
                    help="tune in the key the voice drifted to, not the written one")
+    s.add_argument("--level", type=float, default=9,
+                   help="raise notes that came back too quiet by up to this many dB; 0 to leave them")
     s.add_argument("--smooth", type=float, default=150,
                    help="correct only pitch error slower than this, ms")
     s.set_defaults(fn=cmd_sing)
@@ -177,6 +180,8 @@ def main() -> None:
     c.add_argument("--spread", type=float, default=25, help="voices enter up to this many ms apart")
     c.add_argument("--reverb", type=float, default=3.5, help="reverb decay, seconds")
     c.add_argument("--wet", type=float, default=0.3, help="share of reverb in the mix, 0 to 1")
+    c.add_argument("--level", type=float, default=9,
+                   help="raise notes that came back too quiet by up to this many dB; 0 to leave them")
     c.add_argument("--seed", type=int, default=0, help="changes who stands where and who is early")
     c.set_defaults(fn=cmd_choir)
 

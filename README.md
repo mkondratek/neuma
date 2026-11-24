@@ -35,8 +35,9 @@ ElevenLabs has no endpoint that takes a melody, so neuma goes around:
    then stretched and re-pitched to the melody, with glides between notes.
 4. **Send the guide through ElevenLabs Voice Changer**, which returns it in a
    real-sounding voice.
-5. **Retune.** Voice Changer keeps the timing but not the pitch, so the melody
-   is put back afterwards.
+5. **Retune and level.** Voice Changer keeps the timing but not the pitch, and
+   swallows some syllables, so the melody and the loudness of each note are
+   put back afterwards.
 6. **Mix a choir.** Steps 4 and 5 are repeated with other voices; the takes
    are set slightly apart in pitch, time and place, and put in a church reverb.
 
@@ -52,6 +53,9 @@ calls, and what is cached where.
   and leaving the voice's own fast movement alone gets 85 to 89 of the 91
   notes of verse 1 within 30 cents, and sounds better than imposing the melody
   outright.
+- **Levelling by the guide.** A take comes back with notes up to 24 dB apart
+  in loudness; the guide knows how loud each one was meant to be, and the
+  same alignment that allows retuning allows putting that back.
 - **The choir hides the seams.** Four voices and a long reverb cover most of
   what sounds artificial in a single take.
 - **A speech voice of the right language as the source of the words.** Church
@@ -75,9 +79,13 @@ calls, and what is cached where.
   same guide, so they shape each syllable identically; the differences in
   pitch and timing are added by rule.
 - **Speaking syllables one at a time has traps.** A voice handed "cta" alone
-  spells out the letter ("fa-ci-ta est"), and a lone "sa" was read as an
-  abbreviation. Both are worked around, and the syllables of this chant were
-  checked one by one, but a new chant can bring new ones.
+  spells out the letter ("fa-ci-ta est"); a lone "sa" was read as an
+  abbreviation; the Polish voice opens a rolled "r" with a burst louder than
+  the vowel ("y-ro-ra-te"), lets a final "i" trail into a hum ("cae-lum") and
+  has a "p" too weak to hear ("nubes luant"). Voice Changer turns each into a
+  confident wrong word. All of these are worked around, and `neuma check`
+  now looks for them before credits are spent, but they were found by ear,
+  and a new chant can bring new ones.
 - **It is not cheap on a free plan.** Voice Changer cost about 1,200 credits
   per minute of audio (documented: 1,000). Four voices singing the whole
   chant, about two and a half minutes, need more than the 10,000 credits of a
@@ -107,6 +115,14 @@ uv run neuma guide chants/rorate-caeli/refrain.gabc
 It writes `out/refrain/guide.wav`. Useful options: `--transpose` (semitones),
 `--unit` (seconds per note), `--glide` (milliseconds between notes).
 
+Check a guide for syllables the speech voice got wrong. Also local and free;
+it prints what it measured and writes the flagged places to
+`out/refrain/check.wav` to listen to:
+
+```bash
+uv run neuma check chants/rorate-caeli/refrain.gabc
+```
+
 Church Latin is pronounced differently from country to country. `--latin roman`
 (the default) is the Italianate pronunciation, "che-li" and "et-che";
 `--latin polish` is the central European one, "tse-li" and "ek-tse". Output
@@ -124,7 +140,8 @@ uv run neuma sing chants/rorate-caeli/refrain.gabc --voice George --transpose -7
 ```
 
 It writes `out/refrain/george.wav` and prints how far off the take was before
-and after retuning. The refrain costs about 190 credits per voice. Every
+and after retuning. Notes that came back too quiet are raised to match the
+guide, by 9 dB at most (`--level`, 0 to switch it off). The refrain costs about 190 credits per voice. Every
 response is cached on disk, so re-runs cost nothing, and without
 `--max-credits` nothing is ever sent.
 

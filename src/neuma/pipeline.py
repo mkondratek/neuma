@@ -13,7 +13,7 @@ from neuma import choir as choir_mod
 from neuma import guide as guide_mod
 from neuma.elevenlabs import ElevenLabs
 from neuma.gabc import parse
-from neuma.retune import Tuning, retune, singer_key, tuning
+from neuma.retune import Tuning, level, retune, singer_key, tuning
 from neuma.rhythm import note_events
 
 
@@ -57,6 +57,7 @@ def sing(
     follow_singer_key: bool = False,
     smooth_ms: float = 150,
     detune_cents: float = 0,
+    level_db: float = 9,
     **guide_options,
 ) -> Take:
     """Guide, Voice Changer, retune. Only the Voice Changer step can cost credits,
@@ -66,6 +67,9 @@ def sing(
     to (to the nearest semitone) rather than the key it was asked for, which
     needs less correction. A choir needs every voice in the same key instead,
     and uses ``detune_cents`` to set each voice slightly off the others.
+
+    ``level_db`` is the most a note that came back too quiet is raised to
+    match the guide; 0 leaves the loudness as Voice Changer returned it.
     """
     guide = render_guide(gabc, out_dir, **guide_options)
     guide_path = out_dir / "guide.wav"
@@ -79,6 +83,9 @@ def sing(
     shift = singer_key(audio, sample_rate, guide.notes) if follow_singer_key else 0
     fixed = retune(audio, sample_rate, guide.pitch_hz, smooth_ms=smooth_ms,
                    key_shift=shift + detune_cents / 100)
+    if level_db > 0:
+        fixed = level(fixed, sample_rate, guide.notes, guide.audio, guide_mod.SAMPLE_RATE,
+                      max_boost_db=level_db)
     sung = out_dir / f"{label}.wav"
     sf.write(sung, fixed, sample_rate, subtype="PCM_16")
 
@@ -109,6 +116,7 @@ def choir(
     decay_s: float = 3.5,
     wet: float = 0.3,
     seed: int = 0,
+    level_db: float = 9,
     **guide_options,
 ) -> Choir:
     """Sing ``gabc`` once per voice, ``(voice_id, label)``, and mix the takes
@@ -119,7 +127,8 @@ def choir(
     """
     offsets = choir_mod.detunes(len(voices), detune_cents, seed)
     takes = [
-        sing(gabc, voice_id, client, out_dir, label=label, detune_cents=cents, **guide_options)
+        sing(gabc, voice_id, client, out_dir, label=label, detune_cents=cents, level_db=level_db,
+             **guide_options)
         for (voice_id, label), cents in zip(voices, offsets)
     ]
     audio = []

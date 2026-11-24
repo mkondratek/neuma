@@ -40,7 +40,7 @@ it checks the cache and the credit cap, uploads the guide, and saves the reply.
 | 2 | Rhythm rule | `src/neuma/rhythm.py` | `Score`, transposition | list of `NoteEvent(syllable, midi, units)`, rests included | done, tested |
 | 3 | Guide track | `src/neuma/guide.py`, `latin.py` | note events | `guide.wav`, the melody line, note timings | done, tested; `neuma guide <file.gabc>` |
 | 4 | Voice Changer | `src/neuma/elevenlabs.py` | `guide.wav`, voice id | `<voice>-raw.mp3` in the chosen voice | done, tested |
-| 5 | Retune | `src/neuma/retune.py` | raw take, melody line | `<voice>.wav`, in tune, plus a tuning report | done, tested |
+| 5 | Retune and level | `src/neuma/retune.py` | raw take, melody line, guide | `<voice>.wav`, in tune and evenly loud, plus a tuning report | done, tested |
 | 6 | Choir mix | `src/neuma/choir.py` | several retuned takes | `choir.wav`, stereo, with reverb | done, tested |
 
 `src/neuma/pipeline.py` runs steps 1-5 for one voice (`neuma sing <file.gabc>
@@ -72,6 +72,15 @@ carry the words.
   it cannot start a word with (`cta` as "ci-ta") or expand an abbreviation.
   `ct`, `pt` and `ps` are therefore divided for speech (`fac-ta`), and every
   syllable of the chant was checked for having exactly one vowel.
+- The vowel of a spoken syllable is the first loud voiced stretch of at least
+  80 ms. Loudness alone is not enough: a rolled "r" opens with a burst louder
+  than the vowel, and a nasal after the vowel can be louder too. A "p" gets
+  60 ms of silence put back before it, since trimming removed its closure.
+- `neuma check <file.gabc>` (`src/neuma/check.py`) measures every spoken
+  syllable for these faults before anything is sent: a loud voiced stretch
+  that is not the vowel, an "i" or "e" that turns dull before it ends, a
+  syllable much quieter than the rest. It writes the flagged places to
+  `check.wav`. It finds what has gone wrong before, not everything.
 - The WORLD vocoder splits each syllable into onset consonants, vowel and tail,
   stretches only the vowel to the note lengths, and replaces the spoken pitch
   with the melody. A note starts on its vowel; consonants take their time from
@@ -88,6 +97,13 @@ variant moves the take only by its slow pitch error (anything slower than
 150 ms) and leaves the voice's own fast movement alone, which sounds less
 robotic than imposing the melody line outright. The correction goes through
 the WORLD vocoder; a waveform method (PSOLA) was tried and sounded no better.
+
+Loudness is restored the same way. Voice Changer swallows some syllables: in
+one refrain take the notes came back spread over 24 dB, where the guide has
+them within a few. Each note is brought to the level it has in the guide,
+measured over its middle 60%, with the gain gliding between notes. The boost
+is limited (9 dB by default), because a note that came back as a whisper is
+mostly noise.
 
 **6. Choir mix.** Every take follows the same guide, so the voices come back
 sample-aligned and, after retuning, on exactly the same pitch: stacked as they
@@ -136,6 +152,7 @@ With `--latin polish` the output directory is `out/<chant>-polish/`.
 | `out/<chant>/notes.json` | start, end, pitch and syllable of every note | JSON |
 | `out/<chant>/<voice>-raw.mp3` | copy of a Voice Changer take | MP3 |
 | `out/<chant>/<voice>.wav` | retuned take | WAV, 44.1 kHz, 16-bit mono |
+| `out/<chant>/check.wav` | the places `neuma check` flagged, cut from the guide | WAV, 22.05 kHz, 16-bit mono |
 | `out/<chant>/choir.wav` | the mixed choir | WAV, 44.1 kHz, 16-bit stereo |
 | `docs/samples/*.mp3` | the samples played by the project page (`docs/index.html`, served by GitHub Pages); the only audio that is committed | MP3, stereo or mono |
 
