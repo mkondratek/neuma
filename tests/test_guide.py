@@ -3,7 +3,7 @@ import pytest
 import pyworld as pw
 
 from neuma.gabc import parse
-from neuma.guide import FRAME_MS, FRAME_S, SAMPLE_RATE, glide, midi_to_hz, render
+from neuma.guide import FRAME_MS, FRAME_S, SAMPLE_RATE, _vowel, glide, midi_to_hz, render
 from neuma.rhythm import note_events
 
 
@@ -118,3 +118,34 @@ def test_glide_overshoots_only_slightly():
 def test_slower_glide_is_slower():
     fast, slow = glide(step(), rise_ms=40), glide(step(), rise_ms=160)
     assert np.argmax(fast >= 1.8) < np.argmax(slow >= 1.8)
+
+
+# --- finding the vowel in a spoken syllable ---------------------------------
+
+
+def _energy(*stretches):
+    """Frames of energy from (level, frames) pairs."""
+    return np.concatenate([np.full(n, float(level)) for level, n in stretches])
+
+
+def test_vowel_is_the_loud_stretch_around_the_peak():
+    energy = _energy((0.01, 5), (1.0, 30), (0.05, 10))
+    assert _vowel(energy, np.ones(45, bool)) == (5, 35)
+
+
+def test_quiet_consonant_after_the_vowel_does_not_replace_it():
+    # "kon": the vowel holds the peak and is long enough, though "n" is longer
+    energy = _energy((0.01, 5), (1.0, 25), (0.1, 3), (0.5, 30))
+    assert _vowel(energy, np.ones(63, bool)) == (5, 30)
+
+
+def test_short_burst_before_a_rolled_r_is_not_the_vowel():
+    # Polish "ro": 50 ms of voice before the tongue tap, louder than the "o"
+    energy = _energy((0.01, 4), (1.0, 10), (0.2, 1), (0.6, 25), (0.05, 10))
+    assert _vowel(energy, np.ones(50, bool)) == (15, 40)
+
+
+def test_unvoiced_frames_are_never_the_vowel():
+    energy = _energy((2.0, 10), (1.0, 30))
+    voiced = np.concatenate([np.zeros(10, bool), np.ones(30, bool)])
+    assert _vowel(energy, voiced) == (10, 40)

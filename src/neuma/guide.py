@@ -28,6 +28,7 @@ SAMPLE_RATE = 22050
 FRAME_MS = 5.0
 FRAME_S = FRAME_MS / 1000
 MIN_VOWEL_FRAMES = 12  # 60 ms
+SHORTEST_VOWEL_FRAMES = 16  # 80 ms; a louder spoken stretch shorter than this is not the vowel
 MIN_VOWEL_SHARE = 0.5  # of a syllable's time; consonants are shortened to make room
 
 Speaker = Callable[[str], np.ndarray]  # spelling -> mono float64 at SAMPLE_RATE
@@ -115,18 +116,27 @@ def _analyse(x: np.ndarray, text: str) -> _Spoken:
     if not voiced.any():
         raise ValueError(f"no voiced sound in spoken syllable {text!r}")
 
-    # The vowel is the loudest voiced stretch; grow it while it stays loud.
-    peak = int(np.argmax(np.where(voiced, energy, 0)))
-    threshold = 0.25 * energy[peak]
-    a = peak
-    while a > 0 and voiced[a - 1] and energy[a - 1] > threshold:
-        a -= 1
-    b = peak + 1
-    while b < len(energy) and voiced[b] and energy[b] > threshold:
-        b += 1
-
+    a, b = _vowel(energy, voiced)
     sp = sp / energy[a:b].mean()  # equal loudness across syllables
     return _Spoken(sp, ap, voiced, (a, b))
+
+
+def _vowel(energy: np.ndarray, voiced: np.ndarray) -> tuple[int, int]:
+    """The frame range of the vowel: the loud voiced stretch around the peak.
+
+    A rolled "r" (and some voiced stops) opens with a short burst of voice
+    that can be louder than the vowel after it. Stretching that burst over
+    the note sings "y-ro" for "ro", so a stretch too short to be a vowel
+    gives way to the longest one.
+    """
+    peak = int(np.argmax(np.where(voiced, energy, 0)))
+    loud = voiced & (energy > 0.25 * energy[peak])
+    edges = np.flatnonzero(np.diff(np.concatenate([[0], loud.astype(int), [0]])))
+    runs = [(int(a), int(b)) for a, b in zip(edges[::2], edges[1::2])]
+    a, b = next(run for run in runs if run[0] <= peak < run[1])
+    if b - a < SHORTEST_VOWEL_FRAMES:
+        a, b = max(runs, key=lambda run: run[1] - run[0])
+    return a, b
 
 
 # --- melody line ------------------------------------------------------------
