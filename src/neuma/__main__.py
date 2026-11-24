@@ -3,6 +3,7 @@
     neuma guide chants/rorate-caeli/refrain.gabc          local and free
     neuma voices                                          quota and voices
     neuma sing chants/rorate-caeli/refrain.gabc --voice George --max-credits 200
+    neuma choir chants/rorate-caeli/refrain.gabc --voices George,Brian,Bill,Daniel --max-credits 600
 """
 
 from __future__ import annotations
@@ -79,6 +80,25 @@ def cmd_sing(args) -> None:
     print(take.sung)
 
 
+def cmd_choir(args) -> None:
+    client = ElevenLabs(max_credits=args.max_credits)
+    voices = [_voice(client, name.strip()) for name in args.voices.split(",")]
+    try:
+        result = pipeline.choir(
+            Path(args.gabc), voices, client, _out_dir(args),
+            detune_cents=args.detune, spread_ms=args.spread, decay_s=args.reverb, wet=args.wet,
+            seed=args.seed, **_guide_options(args),
+        )
+    except BudgetExceeded as e:
+        sys.exit(f"stopped after ~{client.spent} credits: {e}. Takes already sung are cached; "
+                 "pass a higher --max-credits to add the rest.")
+    print(f"spent ~{client.spent} credits" if client.spent else "served from cache, 0 credits")
+    for (_, label), take in zip(voices, result.takes):
+        print(f"{label:<10} as returned: {take.before}")
+        print(f"{'':<10} retuned:     {take.after}")
+    print(result.mix)
+
+
 def main() -> None:
     p = argparse.ArgumentParser(prog="neuma", description="Gregorian chant, sung by ElevenLabs voices")
     sub = p.add_subparsers(dest="command", required=True)
@@ -108,6 +128,18 @@ def main() -> None:
     s.add_argument("--smooth", type=float, default=150,
                    help="correct only pitch error slower than this, ms")
     s.set_defaults(fn=cmd_sing)
+
+    c = sub.add_parser("choir", help="several voices, slightly apart, in a church reverb")
+    chant_options(c)
+    c.add_argument("--voices", required=True, help="comma-separated voice ids or name starts")
+    c.add_argument("--max-credits", type=int, default=0,
+                   help="credits this run may spend in total; the default 0 only allows cached takes")
+    c.add_argument("--detune", type=float, default=8, help="voices are tuned up to this many cents apart from the centre")
+    c.add_argument("--spread", type=float, default=25, help="voices enter up to this many ms apart")
+    c.add_argument("--reverb", type=float, default=3.5, help="reverb decay, seconds")
+    c.add_argument("--wet", type=float, default=0.3, help="share of reverb in the mix, 0 to 1")
+    c.add_argument("--seed", type=int, default=0, help="changes who stands where and who is early")
+    c.set_defaults(fn=cmd_choir)
 
     args = p.parse_args()
     args.fn(args)

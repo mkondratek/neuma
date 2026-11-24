@@ -84,3 +84,24 @@ def test_following_the_singers_key(chant, tmp_path):
     # F G A A against a held pitch 250 cents under F: the median note is about 5 semitones above it.
     assert take.key_shift < -2
     assert take.after.within(30) == 4
+
+
+def test_choir_sings_each_voice_once_and_mixes_them(chant, tmp_path):
+    transport, calls = flat_singer(-250)
+    client = ElevenLabs("key", cache_dir=tmp_path / "cache", max_credits=100, transport=transport)
+    voices = [("voice000000000000000a", "anna"), ("voice000000000000000b", "ben")]
+    options = dict(speak=fake_speaker, unit_s=0.3, decay_s=1.0)
+    result = pipeline.choir(chant, voices, client, tmp_path / "out", **options)
+
+    assert len(calls) == 2
+    assert (tmp_path / "out" / "anna.wav").exists() and (tmp_path / "out" / "ben.wav").exists()
+    info = sf.info(result.mix)
+    assert info.channels == 2 and info.duration > 2.0  # the takes plus the reverb tail
+    # The voices are tuned apart, by about the 16 cents asked for.
+    apart = [np.median(take.after.found) for take in result.takes]
+    assert 8 < abs(apart[0] - apart[1]) < 24
+
+    # Remixing with other settings costs nothing.
+    again = ElevenLabs("key", cache_dir=tmp_path / "cache", max_credits=0, transport=transport)
+    pipeline.choir(chant, voices, again, tmp_path / "out", wet=0.5, **options)
+    assert len(calls) == 2
