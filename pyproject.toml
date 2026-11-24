@@ -2,6 +2,7 @@
 name = "neuma"
 version = "0.0.1"
 description = "Gregorian chant in GABC notation, sung by ElevenLabs voices"
+license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
     "httpx>=0.27",
