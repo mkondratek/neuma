@@ -18,8 +18,8 @@ Work in progress.
 - [x] Render a guide track that carries the words and the melody
 - [x] One voice, refrain only, as a proof of concept
 - [x] One voice from the command line: GABC in, retuned take out
+- [x] A small choir with church reverb (refrain)
 - [ ] The whole chant, not only the refrain
-- [ ] A small choir with church reverb
 - [ ] Audio samples here
 
 ## How it works
@@ -35,6 +35,8 @@ ElevenLabs has no endpoint that takes a melody, so neuma goes around:
    real-sounding voice.
 5. **Retune.** Voice Changer keeps the timing but not the pitch, so the melody
    is put back afterwards.
+6. **Mix a choir.** Steps 4 and 5 are repeated with other voices; the takes
+   are set slightly apart in pitch, time and place, and put in a church reverb.
 
 [docs/design.md](docs/design.md) has the details: components, the ElevenLabs
 calls, and what is cached where.
@@ -85,9 +87,17 @@ uv run neuma sing chants/rorate-caeli/refrain.gabc --voice George --transpose -7
 ```
 
 It writes `out/refrain/george.wav` and prints how far off the take was before
-and after retuning. The refrain costs about 125 credits. Every response is
+and after retuning. The refrain costs about 190 credits per voice. Every response is
 cached on disk, so re-runs cost nothing, and without `--max-credits` nothing is
 ever sent.
+
+A choir is the same with several voices. Takes already sung are reused, and
+the mix options (`--detune`, `--spread`, `--reverb`, `--wet`, `--seed`) can be
+changed without spending anything:
+
+```bash
+uv run neuma choir chants/rorate-caeli/refrain.gabc --voices George,Brian,Bill,Daniel --transpose -7 --max-credits 800
+```
 
 ## Credits
 

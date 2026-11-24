@@ -19,7 +19,7 @@ flowchart TD
         vc["4. Voice Changer"]
     end
     subgraph after["On your machine"]
-        retune["5. Retune"] -->|"in-tune take.wav"| mix["6. Choir mix (planned)"]
+        retune["5. Retune"] -->|"in-tune take.wav"| mix["6. Choir mix"]
         mix --> out[/"final audio"/]
     end
     guide ==>|"upload guide.wav"| vc
@@ -41,10 +41,12 @@ it checks the cache and the credit cap, uploads the guide, and saves the reply.
 | 3 | Guide track | `src/neuma/guide.py`, `latin.py` | note events | `guide.wav`, the melody line, note timings | done, tested; `neuma guide <file.gabc>` |
 | 4 | Voice Changer | `src/neuma/elevenlabs.py` | `guide.wav`, voice id | `<voice>-raw.mp3` in the chosen voice | done, tested |
 | 5 | Retune | `src/neuma/retune.py` | raw take, melody line | `<voice>.wav`, in tune, plus a tuning report | done, tested |
-| 6 | Choir mix | - | several retuned takes | one mixed file with reverb | planned (M4) |
+| 6 | Choir mix | `src/neuma/choir.py` | several retuned takes | `choir.wav`, stereo, with reverb | done, tested |
 
-`src/neuma/pipeline.py` runs steps 1-5 for one voice; `neuma sing <file.gabc>
---voice <name>` is its command line.
+`src/neuma/pipeline.py` runs steps 1-5 for one voice (`neuma sing <file.gabc>
+--voice <name>`) and steps 1-6 for several (`neuma choir <file.gabc> --voices
+<name>,<name>`). A choir repeats steps 4 and 5 once per voice, with the same
+guide; step 6 is local and can be redone with other settings for free.
 
 ## How each step works
 
@@ -79,6 +81,15 @@ variant moves the take only by its slow pitch error (anything slower than
 robotic than imposing the melody line outright. The correction goes through
 the WORLD vocoder; a waveform method (PSOLA) was tried and sounded no better.
 
+**6. Choir mix.** Every take follows the same guide, so the voices come back
+sample-aligned and, after retuning, on exactly the same pitch: stacked as they
+are, they sound like one voice with an effect on it. The mix pulls them apart
+again. Each voice is retuned a few cents off the others (up to 8), enters up
+to 25 ms late and drifts a few milliseconds around that, and stands at its own
+place in the stereo field. The sum goes through a reverb whose impulse
+response is generated, not recorded: noise that decays over 3.5 seconds, with
+the high frequencies dying three times faster, as in a stone church.
+
 ## ElevenLabs API
 
 All calls are in `src/neuma/elevenlabs.py`. The key is read from the
@@ -86,7 +97,7 @@ All calls are in `src/neuma/elevenlabs.py`. The key is read from the
 
 | Call | Purpose | Cost |
 |---|---|---|
-| `POST /v1/voice-changer/{voice_id}` | re-voice the guide | documented as 1,000 credits per minute of input; measured about 800 on the free plan |
+| `POST /v1/voice-changer/{voice_id}` | re-voice the guide | documented as 1,000 credits per minute of input; measured about 1,200 on the free plan |
 | `GET /v1/voices` | list usable voices | free |
 | `GET /v1/user/subscription` | read remaining quota | free |
 
@@ -116,6 +127,7 @@ Nothing below is committed; `.cache/`, `out/` and `.env` are git-ignored.
 | `out/<chant>/notes.json` | start, end, pitch and syllable of every note | JSON |
 | `out/<chant>/<voice>-raw.mp3` | copy of a Voice Changer take | MP3 |
 | `out/<chant>/<voice>.wav` | retuned take | WAV, 44.1 kHz, 16-bit mono |
+| `out/<chant>/choir.wav` | the mixed choir | WAV, 44.1 kHz, 16-bit stereo |
 
 The caches are keyed by content, so they are safe to delete: spoken syllables
 are regenerated for free, Voice Changer takes cost credits again.
@@ -124,8 +136,10 @@ are regenerated for free, Voice Changer takes cost credits again.
 
 - Voice Changer does not preserve pitch, so step 5 is required, and it costs
   some naturalness: the result is in tune but still closer to robotic than human.
-- How far off Voice Changer lands varies from take to take: median errors of
-  300 cents and of 70 cents were both seen for the same refrain and voice.
+- How far off Voice Changer lands varies from take to take and from voice to
+  voice: median errors from 70 to 350 cents were seen for the same refrain.
+- The choir's differences in pitch and timing are added by rule. All voices
+  still share one guide, so they breathe and shape every syllable identically.
 - The guide's speech source is macOS-only.
 - Pitch measurement near consonants is unreliable; tuning figures are medians
   over the middle of each note.
