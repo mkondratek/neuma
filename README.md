@@ -20,6 +20,7 @@ Voices by [elevenlabs.io](https://elevenlabs.io).
 |---|---|
 | [rorate-caeli-choir.mp3](docs/samples/rorate-caeli-choir.mp3) | The whole chant: the refrain and all four verses. Four voices, church reverb, Roman (Italianate) Latin. 3 min 33 s |
 | [rorate-caeli-choir-polish.mp3](docs/samples/rorate-caeli-choir-polish.mp3) | The refrain alone in Polish-style Latin, for comparison |
+| [refrain-four-stages.mp3](docs/samples/refrain-four-stages.mp3) | How it is made, in 43 seconds. The refrain four times: the guide, the take as ElevenLabs returned it, the take retuned, the choir |
 | [refrain-one-voice.mp3](docs/samples/refrain-one-voice.mp3) | One voice, retuned, no reverb: what the choir is made of |
 | [refrain-one-voice-before-retuning.mp3](docs/samples/refrain-one-voice-before-retuning.mp3) | The same take as ElevenLabs returned it: human, and out of tune |
 | [refrain-guide.mp3](docs/samples/refrain-guide.mp3) | The local guide track that ElevenLabs was given |
