@@ -121,6 +121,11 @@ the high frequencies dying three times faster, as in a stone church.
 All calls are in `src/neuma/elevenlabs.py`. The key is read from the
 `ELEVENLABS_API_KEY` environment variable and sent as the `xi-api-key` header.
 
+The calls are plain HTTP (`httpx`), not the
+[official SDK](https://github.com/elevenlabs/elevenlabs-python): three simple
+endpoints do not need it, and a thin client keeps the cache and the credit
+cap in one place, in front of the network, and easy to test without it.
+
 | Call | Purpose | Cost |
 |---|---|---|
 | `POST /v1/voice-changer/{voice_id}` | re-voice the guide | documented as 1,000 credits per minute of input; measured about 1,200 on the free plan |
